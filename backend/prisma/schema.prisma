@@ -8,4 +8,147 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-        
+
+
+enum Role {
+  ADMIN
+  KNOWLEDGE_SEEKER
+  KNOWLEDGE_PROVIDER
+}
+
+enum AvailableDays {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum PaymentMethod {
+  RAZORPAY
+  STRIPE
+  QR_CODE
+}
+
+enum CommunicationMedium {
+  VIDEO_CALL
+  AUDIO_CALL
+  MESSAGE
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role
+  knowledgeProvider KnowledgeProvider?
+  knowledgeSeeker KnowledgeSeeker?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Search {
+  id        String   @id @default(uuid())
+  knowledgeSeeker KnowledgeSeeker @relation(fields: [knowledgeSeekerId], references: [id])
+  knowledgeSeekerId String
+  searchQuery String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model KnowledgeProvider {
+  id        String   @id @default(uuid())
+  user User @relation(fields: [userId], references: [id])
+  userId String @unique
+
+  //provider profile details 
+
+  name String
+  description String?
+  websiteUrl String?
+  linkedinUrl String?
+  twitterUrl String?
+  githubUrl String?
+  facebookUrl String?
+  instagramUrl String?
+  youtubeUrl String?
+  tiktokUrl String?
+  profilePictureUrl String?
+  bannerPictureUrl String?
+  location String?
+  industry String?
+  company String?
+  jobTitle String?
+  education String?
+  skills String[]
+  interests String[]
+  bio String?
+
+  // provider availability details
+  isAvailable Boolean @default(true)
+  availableDays String[]
+  availableTimes String[]
+  availableLanguages String[]
+
+  // provider booking details
+  appointments Appointment[]
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model KnowledgeSeeker {
+  id        String   @id @default(uuid())
+  user User @relation(fields: [userId], references: [id])
+  userId String @unique
+
+  name String
+  email String
+  phone String
+  interests String[]
+  profilePictureUrl String?
+  industry String?
+
+  searches Search[]
+  
+
+  appointments Appointment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Appointment {
+  id        String   @id @default(uuid())
+  knowledgeProvider KnowledgeProvider @relation(fields: [knowledgeProviderId], references: [id])
+  knowledgeProviderId String
+  knowledgeSeeker KnowledgeSeeker @relation(fields: [knowledgeSeekerId], references: [id])
+  knowledgeSeekerId String
+  appointmentDate DateTime
+  appointmentTime DateTime
+  appointmentStatus AppointmentStatus @default(PENDING)
+  communicationMedium CommunicationMedium
+  totalPaymemnt Decimal
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod PaymentMethod
+  paymentTransactionId String?
+  paymentTransactionStatus String?
+  paymentTransactionError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
