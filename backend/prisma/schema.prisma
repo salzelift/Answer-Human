@@ -6,7 +6,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 
@@ -52,20 +51,55 @@ enum CommunicationMedium {
 
 model User {
   id        String   @id @default(uuid())
+  username  String   @unique
   email     String   @unique
   password  String
   role      Role
+  isEmailVerified Boolean @default(false)
   knowledgeProvider KnowledgeProvider?
   knowledgeSeeker KnowledgeSeeker?
+  otps      OTP[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Search {
+model OTP {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  code      String
+  type      OTPType
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, type])
+}
+
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum QuestionStatus {
+  PENDING
+  ANSWERED
+  CLOSED
+}
+
+model Questions {
   id        String   @id @default(uuid())
   knowledgeSeeker KnowledgeSeeker @relation(fields: [knowledgeSeekerId], references: [id])
   knowledgeSeekerId String
-  searchQuery String
+  knowledgeProvider KnowledgeProvider? @relation(fields: [knowledgeProviderId], references: [id])
+  knowledgeProviderId String?
+  questionTitle String
+  questionDescription String
+  questionCategory String
+  questionTags String[]
+  questionStatus QuestionStatus @default(PENDING)
+  appointments Appointment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -90,7 +124,7 @@ model KnowledgeProvider {
   profilePictureUrl String?
   bannerPictureUrl String?
   location String?
-  industry String?
+  categories Category[]
   company String?
   jobTitle String?
   education String?
@@ -98,7 +132,9 @@ model KnowledgeProvider {
   interests String[]
   bio String?
 
-  // provider availability details
+  // provider verification & availability details
+  isVerified Boolean @default(false)
+  verifiedAt DateTime?
   isAvailable Boolean @default(true)
   availableDays String[]
   availableTimes String[]
@@ -106,6 +142,7 @@ model KnowledgeProvider {
 
   // provider booking details
   appointments Appointment[]
+  questions Questions[]
 
 
   createdAt DateTime @default(now())
@@ -117,16 +154,49 @@ model KnowledgeSeeker {
   user User @relation(fields: [userId], references: [id])
   userId String @unique
 
+  // Basic Information
   name String
   email String
   phone String
-  interests String[]
+  interestedCategories Category[]
   profilePictureUrl String?
-  industry String?
+  isOnboarded Boolean @default(false)
 
-  searches Search[]
-  
+  // Demographic Heuristics
+  age Int?
+  gender String?
+  occupation String?
+  educationLevel String?
+  experienceLevel String? // Beginner, Intermediate, Advanced, Expert
 
+  // Preference Heuristics
+  preferredCommunicationMedium String? // VIDEO_CALL, AUDIO_CALL, MESSAGE
+  preferredPriceRange String? // 0-50, 50-100, 100-200, 200+
+  preferredSessionDuration String? // 30min, 1hr, 2hr, 3hr+
+  preferredTimeSlots String[] // Morning, Afternoon, Evening, Night
+  preferredLanguages String[]
+  budgetRange String? // Monthly budget: 0-100, 100-500, 500-1000, 1000+
+  urgencyLevel String? // Low, Medium, High, Critical
+
+  // Learning & Interaction Preferences
+  learningStyle String? // Visual, Auditory, Reading, Kinesthetic, Mixed
+  preferredExpertRating Decimal? // Minimum rating 1.0-5.0
+  preferredResponseTime String? // Immediate, Within 1hr, Within 24hr, Flexible
+  preferredExpertLocation String? // Same timezone, Same country, Any
+  timezone String?
+
+  // Technical Preferences
+  devicePreferences String[] // Desktop, Mobile, Tablet
+  notificationPreferences Json? // Email, SMS, Push settings
+
+  // Behavioral Heuristics for Recommendations
+  searchHistory Json? // Array of search queries with timestamps
+  clickPatterns Json? // Track which experts/categories are clicked most
+  lastActiveAt DateTime?
+  profileCompletionScore Int @default(0) // 0-100 percentage
+
+  // Relations
+  searches Questions[]
   appointments Appointment[]
 
   createdAt DateTime @default(now())
@@ -145,10 +215,29 @@ model Appointment {
   communicationMedium CommunicationMedium
   totalPaymemnt Decimal
   paymentStatus PaymentStatus @default(PENDING)
+  questions Questions @relation(fields: [questionsId], references: [id])
+  questionsId String
   paymentMethod PaymentMethod
   paymentTransactionId String?
   paymentTransactionStatus String?
   paymentTransactionError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model Category {
+  id String @id @default(uuid())
+  name String
+  description String
+  imageUrl String
+  slug String
+  parentCategoryId String?
+  parentCategory Category? @relation("SelfRelation", fields: [parentCategoryId], references: [id])
+  subCategories Category[] @relation("SelfRelation")
+
+  knowledgeProviders KnowledgeProvider[]
+  knowledgeSeekers KnowledgeSeeker[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
