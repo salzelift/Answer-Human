@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { Request } from "express";
 import prisma from "./utils/prisma";
 import { authenticate, AuthRequest } from "./middleware/auth";
+import { emitEvent } from "./realtime";
 // QuestionStatus enum - Will be available from @prisma/client after regeneration
 enum QuestionStatus {
   PENDING = "PENDING",
@@ -310,6 +311,23 @@ router.post("/questions", authenticate, async (req: AuthRequest, res: Response) 
       },
     });
 
+    emitEvent("question:new", question);
+
+    const categoryRoom = question.questionCategory
+      ? `category:${question.questionCategory.toLowerCase()}`
+      : null;
+
+    if (categoryRoom) {
+      emitEvent("question:new", question, categoryRoom);
+    }
+
+    if (Array.isArray(question.questionTags)) {
+      question.questionTags
+        .filter((tag) => typeof tag === "string" && tag.trim())
+        .forEach((tag) => {
+          emitEvent("question:new", question, `tag:${tag.toLowerCase()}`);
+        });
+    }
     res.status(201).json({ message: "Question created successfully", question });
   } catch (error: any) {
     console.error("Create question error:", error);
@@ -355,6 +373,23 @@ router.put("/questions/:id", authenticate, async (req: AuthRequest, res: Respons
       },
     });
 
+    emitEvent("question:update", question, `question:${id}`);
+
+    const categoryRoom = question.questionCategory
+      ? `category:${question.questionCategory.toLowerCase()}`
+      : null;
+
+    if (categoryRoom) {
+      emitEvent("question:update", question, categoryRoom);
+    }
+
+    if (Array.isArray(question.questionTags)) {
+      question.questionTags
+        .filter((tag) => typeof tag === "string" && tag.trim())
+        .forEach((tag) => {
+          emitEvent("question:update", question, `tag:${tag.toLowerCase()}`);
+        });
+    }
     res.json({ message: "Question updated successfully", question });
   } catch (error: any) {
     console.error("Update question error:", error);

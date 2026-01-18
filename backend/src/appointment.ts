@@ -1,6 +1,7 @@
 import { Router, Response, Request } from "express";
 import prisma from "./utils/prisma";
 import { authenticate, AuthRequest } from "./middleware/auth";
+import { sendAppointmentEmail } from "./notifications";
 import { Prisma } from "@prisma/client";
 
 const router = Router();
@@ -184,11 +185,13 @@ router.post("/", authenticate, async (req: AuthRequest, res: Response) => {
     // Verify expert exists (try by id first, then by userId as fallback)
     let expert = await prisma.knowledgeProvider.findUnique({
       where: { id: expertId },
+      include: { user: true },
     });
 
     if (!expert) {
       expert = await prisma.knowledgeProvider.findUnique({
         where: { userId: expertId },
+        include: { user: true },
       });
     }
 
@@ -296,6 +299,16 @@ router.post("/", authenticate, async (req: AuthRequest, res: Response) => {
         },
       },
     });
+
+    if (expert.user?.email) {
+      await sendAppointmentEmail({
+        to: expert.user.email,
+        seekerName: seeker.name,
+        appointmentDate,
+        appointmentTime,
+        communicationMedium,
+      });
+    }
 
     res.status(201).json({ appointment });
   } catch (error: any) {
@@ -426,4 +439,5 @@ router.put("/:id/cancel", authenticate, async (req: AuthRequest, res: Response) 
 });
 
 export default router;
+
 

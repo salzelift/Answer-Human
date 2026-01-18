@@ -16,6 +16,103 @@ export const Navbar = () => {
   // Determine user type from role
   const isExpert = user?.role === "KNOWLEDGE_PROVIDER";
   const isSeeker = user?.role === "KNOWLEDGE_SEEKER";
+  const isExpertRoute = pathname.startsWith("/expert");
+  const showExpertNav = isAuthenticated && isExpert && isExpertRoute;
+
+  const isActive = (href: string) => {
+    if (href === "/explore") return pathname.startsWith("/explore");
+    if (href === "/post") return pathname.startsWith("/post");
+    if (href === "/expert/onboarding") return pathname.startsWith("/expert/onboarding");
+    if (href === "/expert/feed") return pathname.startsWith("/expert/feed");
+    if (href === "/expert/requests") return pathname.startsWith("/expert/requests");
+    if (href === "/expert") return pathname === "/expert";
+    return pathname === href;
+  };
+
+  const seekerNavItems = [
+    {
+      href: "/explore",
+      label: "Explore",
+      show: true,
+    },
+    {
+      href: "/post",
+      label: (
+        <span className="flex items-center gap-2">
+          Post a Question
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-900 opacity-75" />
+            <span className="relative inline-flex size-2 rounded-full bg-blue-900" />
+          </span>
+        </span>
+      ),
+      show: isAuthenticated,
+    },
+    {
+      href: "/expert",
+      label: (
+        <span className="flex items-center gap-1">
+          <LayoutDashboard size={16} />
+          Expert Dashboard
+        </span>
+      ),
+      show: isAuthenticated && isExpert,
+    },
+    {
+      href: "/expert/onboarding",
+      label: "Become an Expert",
+      show: isAuthenticated && isSeeker,
+    },
+  ];
+
+  const expertNavItems = [
+    {
+      href: "/expert/feed",
+      label: "Feed",
+      show: true,
+    },
+    {
+      href: "/expert/requests",
+      label: "Requests",
+      show: true,
+    },
+    {
+      href: "/expert",
+      label: (
+        <span className="flex items-center gap-1">
+          <LayoutDashboard size={16} />
+          Expert Dashboard
+        </span>
+      ),
+      show: true,
+    },
+  ];
+
+  const navItems = showExpertNav ? expertNavItems : seekerNavItems;
+
+  const renderDesktopLinks = () =>
+    navItems
+      .filter((item) => item.show)
+      .map((item) => (
+        <li key={item.href}>
+          <Link
+            href={item.href}
+            className="hover:text-primary transition"
+            style={{ fontWeight: isActive(item.href) ? "bold" : "normal" }}
+          >
+            {item.label}
+          </Link>
+        </li>
+      ));
+
+  const renderMobileLinks = () =>
+    navItems
+      .filter((item) => item.show)
+      .map((item) => (
+        <Link key={item.href} href={item.href} className="block text-lg">
+          {item.label}
+        </Link>
+      ));
 
   const handleLogout = () => {
     logout();
@@ -37,82 +134,7 @@ export const Navbar = () => {
 
           {/* DESKTOP MENU */}
           <div className="hidden lg:flex items-center gap-6">
-            <ul className="flex items-center gap-6">
-              {/* SEEKER NAVIGATION */}
-              {(!isAuthenticated || isSeeker) && (
-                <>
-                  <li>
-                    <Link 
-                      href="/explore" 
-                      className="hover:text-primary transition" 
-                      style={{fontWeight: pathname === "/explore" ? "bold" : "normal"}}
-                    >
-                      Explore
-                    </Link>
-                  </li>
-                  {isAuthenticated && (
-                    <li className="flex items-center gap-2">
-                      <Link 
-                        href="/post" 
-                        className="hover:text-primary transition" 
-                        style={{fontWeight: pathname === "/post" ? "bold" : "normal"}}
-                      >
-                        Post a Question
-                      </Link>
-                      <span className="relative flex size-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-900 opacity-75" />
-                        <span className="relative inline-flex size-2 rounded-full bg-blue-900" />
-                      </span>
-                    </li>
-                  )}
-                  {isAuthenticated && (
-                    <li>
-                      <Link
-                        href="/expert/onboarding"
-                        className="hover:text-primary transition"
-                        style={{fontWeight: pathname === "/expert/onboarding" ? "bold" : "normal"}}
-                      >
-                        Become an Expert
-                      </Link>
-                    </li>
-                  )}
-                </>
-              )}
-
-              {/* EXPERT NAVIGATION */}
-              {isAuthenticated && isExpert && (
-                <>
-                  <li>
-                    <Link 
-                      href="/expert/feed" 
-                      className="hover:text-primary transition" 
-                      style={{fontWeight: pathname === "/expert/feed" ? "bold" : "normal"}}
-                    >
-                      Feed
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/expert/requests"
-                      className="hover:text-primary transition"
-                      style={{fontWeight: pathname === "/expert/requests" || pathname.startsWith("/expert/requests/") ? "bold" : "normal"}}
-                    >
-                      Requests
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/expert"
-                      className="hover:text-primary transition flex items-center gap-1"
-                      style={{fontWeight: pathname === "/expert" ? "bold" : "normal"}}
-                    >
-                      <LayoutDashboard size={16} />
-                      Expert Dashboard
-                    </Link>
-                  </li>
-                </>
-              )}
-            </ul>
+            <ul className="flex items-center gap-6">{renderDesktopLinks()}</ul>
 
             {isAuthenticated ? (
               <>
@@ -164,40 +186,7 @@ export const Navbar = () => {
         {/* MOBILE MENU */}
         {open && (
           <div className="lg:hidden mt-6 border-t pt-6 space-y-4">
-            {/* SEEKER NAVIGATION */}
-            {(!isAuthenticated || isSeeker) && (
-              <>
-                <Link href="/explore" className="block text-lg">
-                  Explore
-                </Link>
-                {isAuthenticated && (
-                  <Link href="/post" className="block text-lg">
-                    Post a Question
-                  </Link>
-                )}
-                {isAuthenticated && (
-                  <Link href="/expert/onboarding" className="block text-lg">
-                    Become an Expert
-                  </Link>
-                )}
-              </>
-            )}
-
-            {/* EXPERT NAVIGATION */}
-            {isAuthenticated && isExpert && (
-              <>
-                <Link href="/expert/feed" className="block text-lg">
-                  Feed
-                </Link>
-                <Link href="/expert/requests" className="block text-lg">
-                  Requests
-                </Link>
-                <Link href="/expert" className="block text-lg flex items-center gap-2">
-                  <LayoutDashboard size={16} />
-                  Expert Dashboard
-                </Link>
-              </>
-            )}
+            {renderMobileLinks()}
 
             <div className="flex gap-4 pt-4">
               {isAuthenticated ? (

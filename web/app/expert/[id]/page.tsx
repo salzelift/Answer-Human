@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
+import { 
   Calendar,
   Clock,
   MapPin,
@@ -39,7 +39,7 @@ interface ExpertWithExtras extends KnowledgeProvider {
   totalAppointments?: number;
   responseTime?: string | null;
   categories?: Array<{
-    id: string;
+  id: string;
     name: string;
     slug: string;
   }>;
@@ -116,10 +116,12 @@ export default function ExpertProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading expert profile...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading expert profile...</p>
+          </div>
         </div>
       </div>
     );
@@ -127,9 +129,11 @@ export default function ExpertProfilePage() {
 
   if (!expert) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-2xl font-bold mb-4">Expert not found</h1>
-        <Button onClick={() => router.push("/explore")}>Back to Explore</Button>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 text-center">
+          <h1 className="text-2xl font-semibold mb-4">Expert not found</h1>
+          <Button onClick={() => router.push("/explore")}>Back to Explore</Button>
+        </div>
       </div>
     );
   }
@@ -139,7 +143,7 @@ export default function ExpertProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* Banner */}
       <div className="relative overflow-hidden">
         <div
@@ -155,11 +159,11 @@ export default function ExpertProfilePage() {
           }
         >
           {/* Overlay for better text visibility */}
-          {expert.bannerPictureUrl && (
+        {expert.bannerPictureUrl && (
             <div className="absolute inset-0 bg-black/30" />
-          )}
+                  )}
+          </div>
         </div>
-      </div>
 
       <div className="container mx-auto px-4 -mt-40 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -231,8 +235,8 @@ export default function ExpertProfilePage() {
                               <span className="font-medium text-purple-700">
                                 {expert.totalAppointments} sessions
                               </span>
-                            </div>
-                          )}
+                      </div>
+                    )}
                         </div>
                       </div>
 
@@ -248,7 +252,7 @@ export default function ExpertProfilePage() {
                           <div className="flex items-center gap-1 text-yellow-400 mb-1">
                             {[...Array(5)].map((_, i) => (
                               <Star
-                                key={i}
+                              key={i}
                                 className={`h-3 w-3 ${
                                   i < Math.floor(expert.rating || 0)
                                     ? "fill-yellow-400 text-yellow-400"
@@ -328,8 +332,8 @@ export default function ExpertProfilePage() {
                   <div className="pl-4 border-l-4 border-blue-200 bg-blue-50 py-3 pr-4 rounded-r">
                     <p className="text-gray-600 leading-relaxed whitespace-pre-line">
                       {expert.description}
-                    </p>
-                  </div>
+                            </p>
+                          </div>
                 )}
               </CardContent>
             </Card>
@@ -352,10 +356,10 @@ export default function ExpertProfilePage() {
                       >
                         {category.name}
                       </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                            ))}
+                          </div>
+                      </CardContent>
+                    </Card>
             )}
 
             {/* Skills */}
@@ -377,8 +381,8 @@ export default function ExpertProfilePage() {
                       >
                         {skill}
                       </Badge>
-                    ))}
-                  </div>
+                  ))}
+                </div>
                 </CardContent>
               </Card>
             )}
@@ -391,7 +395,7 @@ export default function ExpertProfilePage() {
                     <GraduationCap className="h-5 w-5 text-indigo-600" />
                     Education
                   </CardTitle>
-                </CardHeader>
+                      </CardHeader>
                 <CardContent className="pt-6">
                   <div className="flex items-start gap-3 p-4 bg-indigo-50/50 rounded-lg border border-indigo-100">
                     <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
@@ -401,8 +405,8 @@ export default function ExpertProfilePage() {
                       {expert.education}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
+                      </CardContent>
+                    </Card>
             )}
 
             {/* Interests */}
@@ -424,8 +428,8 @@ export default function ExpertProfilePage() {
                       >
                         {interest}
                       </Badge>
-                    ))}
-                  </div>
+                  ))}
+                </div>
                 </CardContent>
               </Card>
             )}
@@ -442,7 +446,7 @@ export default function ExpertProfilePage() {
                 <p className="text-blue-100 text-sm">
                   Get expert guidance from {expert.name.split(" ")[0]}
                 </p>
-              </div>
+                        </div>
               <CardContent className="pt-6 space-y-5">
                 {/* Availability Status */}
                 <div
@@ -452,7 +456,7 @@ export default function ExpertProfilePage() {
                       : "bg-gray-50 border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                     <div
                       className={`h-3 w-3 rounded-full ${
                         expert.isAvailable
@@ -483,9 +487,9 @@ export default function ExpertProfilePage() {
                           className="text-xs px-3 py-1 bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 font-medium"
                         >
                           {formatDay(day)}
-                        </Badge>
-                      ))}
-                    </div>
+                          </Badge>
+                        ))}
+                      </div>
                   </div>
                 )}
 

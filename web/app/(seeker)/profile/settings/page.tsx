@@ -152,48 +152,58 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading settings...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading settings...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-4xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/profile")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Profile
-        </Button>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/profile")}
+            className="w-fit"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Profile
+          </Button>
 
-        <h1 className="text-3xl font-bold mb-6">Settings</h1>
+          <Card className="border border-slate-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-2xl">Settings</CardTitle>
+              <CardDescription>
+                Control your demographic, notification, and device preferences.
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
-        <Tabs defaultValue="demographic" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="demographic">
-              <User className="h-4 w-4 mr-2" />
-              Demographic
-            </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="h-4 w-4 mr-2" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="technical">
-              <Shield className="h-4 w-4 mr-2" />
-              Technical
-            </TabsTrigger>
-          </TabsList>
+          <Tabs defaultValue="demographic" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
+              <TabsTrigger value="demographic">
+                <User className="h-4 w-4 mr-2" />
+                Demographic
+              </TabsTrigger>
+              <TabsTrigger value="notifications">
+                <Bell className="h-4 w-4 mr-2" />
+                Notifications
+              </TabsTrigger>
+              <TabsTrigger value="technical">
+                <Shield className="h-4 w-4 mr-2" />
+                Technical
+              </TabsTrigger>
+            </TabsList>
 
           {/* Demographic Tab */}
           <TabsContent value="demographic" className="space-y-6">
-            <Card>
+            <Card className="border border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Demographic Information</CardTitle>
                 <CardDescription>
@@ -291,7 +301,7 @@ export default function SettingsPage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-6">
-            <Card>
+            <Card className="border border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Notification Preferences</CardTitle>
                 <CardDescription>
@@ -392,7 +402,7 @@ export default function SettingsPage() {
 
           {/* Technical Tab */}
           <TabsContent value="technical" className="space-y-6">
-            <Card>
+            <Card className="border border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Technical Preferences</CardTitle>
                 <CardDescription>

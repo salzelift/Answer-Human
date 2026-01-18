@@ -2,6 +2,7 @@ import { Proposal } from "@/types/proposal.types";
 import { KnowledgeProvider } from "@/types/expert.types";
 import { CommunicationMedium } from "@/types/expert.types";
 import { getExpertById } from "./get-experts";
+import { proposalsApi } from "./api/proposals";
 
 // Mock proposals data
 const mockProposals: Omit<Proposal, "expert">[] = [
@@ -42,7 +43,16 @@ const mockProposals: Omit<Proposal, "expert">[] = [
 
 export async function getProposalsByQuestionId(questionId: string): Promise<Proposal[]> {
   // In production, this would fetch from API
-  const proposalsData = mockProposals.filter(p => p.questionId === questionId);
+  let proposalsData = mockProposals.filter(p => p.questionId === questionId);
+  
+  try {
+    const apiProposals = await proposalsApi.getByQuestionId(questionId);
+    if (apiProposals.length > 0) {
+      proposalsData = apiProposals;
+    }
+  } catch (error) {
+    console.error("Error fetching proposals from API, using mock data:", error);
+  }
   
   // Fetch expert data for each proposal
   const proposals: Proposal[] = await Promise.all(

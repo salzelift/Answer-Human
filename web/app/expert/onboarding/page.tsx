@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,22 +14,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Loader2,
-  CheckCircle,
-  Users,
-  TrendingUp,
-  DollarSign,
-  Globe,
-  Star,
-  ArrowRight,
-} from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/auth-context";
 import { providerOnboardingApi } from "@/lib/api/provider-onboarding";
 import { getCategories } from "@/lib/get-categories";
-import { flattenCategories } from "@/lib/category-utils";
 import { Category } from "@/types/category.types";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Award,
+  Briefcase,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  DollarSign,
+  Loader2,
+  MapPin,
+  Rocket,
+  Shield,
+  Sparkles,
+  Star,
+  TrendingUp,
+  User,
+  Users,
+  Zap,
+} from "lucide-react";
+import Link from "next/link";
+
+type OnboardingStep = 1 | 2 | 3 | 4;
 
 const DAYS_OF_WEEK = [
   "MONDAY",
@@ -41,677 +53,898 @@ const DAYS_OF_WEEK = [
   "SUNDAY",
 ];
 
-const DEFAULT_TIME_SLOTS = [
-  "09:00-10:00",
-  "10:00-11:00",
-  "11:00-12:00",
-  "13:00-14:00",
-  "14:00-15:00",
-  "15:00-16:00",
-  "16:00-17:00",
-  "17:00-18:00",
+const TIME_SLOTS = [
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00",
 ];
 
-const LANGUAGES = [
-  "English",
-  "Spanish",
-  "French",
-  "German",
-  "Chinese",
-  "Japanese",
-  "Hindi",
-  "Arabic",
-  "Portuguese",
-  "Russian",
-];
-
-export default function BecomeExpertPage() {
+export default function ExpertOnboardingPage() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [canBecomeExpert, setCanBecomeExpert] = useState(true);
+  const [error, setError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   // Form state
-  const [name, setName] = useState("");
-  const [bio, setBio] = useState("");
-  const [description, setDescription] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
-  const [company, setCompany] = useState("");
-  const [education, setEducation] = useState("");
-  const [location, setLocation] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [twitterUrl, setTwitterUrl] = useState("");
-  const [githubUrl, setGithubUrl] = useState("");
-  const [profilePictureUrl, setProfilePictureUrl] = useState("");
-  const [bannerPictureUrl, setBannerPictureUrl] = useState("");
-  const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
-  const [interests, setInterests] = useState<string[]>([]);
-  const [interestInput, setInterestInput] = useState("");
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["English"]);
+  const [formData, setFormData] = useState({
+    // Step 1: Basic Info
+    jobTitle: "",
+    bio: "",
+    location: "",
+    linkedInUrl: "",
+    twitterUrl: "",
+    websiteUrl: "",
 
+    // Step 2: Professional Details
+    industry: "",
+    yearsOfExperience: "",
+    skills: [] as string[],
+    certifications: "",
+
+    // Step 3: Categories & Expertise
+    selectedCategories: [] as string[],
+    interests: [] as string[],
+
+    // Step 4: Availability & Pricing
+    availableDays: [] as string[],
+    availableTimeStart: "09:00",
+    availableTimeEnd: "17:00",
+    hourlyRate: "",
+  });
+
+  const [skillInput, setSkillInput] = useState("");
+  const [interestInput, setInterestInput] = useState("");
+
+  // Check authentication and eligibility
   useEffect(() => {
-    loadData();
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login?redirect=/expert/onboarding");
+      return;
+    }
+
+    const checkEligibility = async () => {
+      try {
+        const result = await providerOnboardingApi.checkEligibility();
+        if (result.isExpert) {
+        router.push("/expert");
+        }
+      } catch (err) {
+        console.error("Error checking eligibility:", err);
+      }
+    };
+
+    if (isAuthenticated) {
+      checkEligibility();
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Load categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const cats = await getCategories();
+        setCategories(cats);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+    loadCategories();
   }, []);
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      const [eligibility, categoriesData] = await Promise.all([
-        providerOnboardingApi.checkEligibility(),
-        getCategories(),
-      ]);
-
-      setCanBecomeExpert(eligibility.canBecomeExpert);
-      setCategories(categoriesData);
-
-      if (!eligibility.canBecomeExpert) {
-        toast({
-          title: "Already an Expert",
-          description: "You're already registered as an expert!",
-        });
-        router.push("/expert");
-      }
-    } catch (error: any) {
-      console.error("Error loading data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load data",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleInputChange = (field: string, value: string | string[]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleAddSkill = () => {
-    if (skillInput.trim() && !skills.includes(skillInput.trim())) {
-      setSkills([...skills, skillInput.trim()]);
+  const addSkill = () => {
+    if (skillInput.trim() && !formData.skills.includes(skillInput.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        skills: [...prev.skills, skillInput.trim()],
+      }));
       setSkillInput("");
     }
   };
 
-  const handleRemoveSkill = (skill: string) => {
-    setSkills(skills.filter((s) => s !== skill));
+  const removeSkill = (skill: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      skills: prev.skills.filter((s) => s !== skill),
+    }));
   };
 
-  const handleAddInterest = () => {
-    if (interestInput.trim() && !interests.includes(interestInput.trim())) {
-      setInterests([...interests, interestInput.trim()]);
+  const addInterest = () => {
+    if (interestInput.trim() && !formData.interests.includes(interestInput.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        interests: [...prev.interests, interestInput.trim()],
+      }));
       setInterestInput("");
     }
   };
 
-  const handleRemoveInterest = (interest: string) => {
-    setInterests(interests.filter((i) => i !== interest));
+  const removeInterest = (interest: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      interests: prev.interests.filter((i) => i !== interest),
+    }));
   };
 
   const toggleCategory = (categoryId: string) => {
-    setSelectedCategoryIds((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
-    );
+    setFormData((prev) => ({
+      ...prev,
+      selectedCategories: prev.selectedCategories.includes(categoryId)
+        ? prev.selectedCategories.filter((id) => id !== categoryId)
+        : [...prev.selectedCategories, categoryId],
+    }));
   };
 
   const toggleDay = (day: string) => {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
+    setFormData((prev) => ({
+      ...prev,
+      availableDays: prev.availableDays.includes(day)
+        ? prev.availableDays.filter((d) => d !== day)
+        : [...prev.availableDays, day],
+    }));
   };
 
-  const toggleTime = (time: string) => {
-    setSelectedTimes((prev) =>
-      prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time]
-    );
+  const validateStep = (step: OnboardingStep): boolean => {
+    setError("");
+
+    switch (step) {
+      case 1:
+        if (!formData.jobTitle.trim()) {
+          setError("Job title is required");
+          return false;
+        }
+        if (!formData.bio.trim() || formData.bio.length < 50) {
+          setError("Bio must be at least 50 characters");
+          return false;
+        }
+        return true;
+
+      case 2:
+        if (!formData.industry.trim()) {
+          setError("Industry is required");
+          return false;
+        }
+        if (!formData.yearsOfExperience) {
+          setError("Years of experience is required");
+          return false;
+        }
+        if (formData.skills.length < 3) {
+          setError("Please add at least 3 skills");
+          return false;
+        }
+        return true;
+
+      case 3:
+        if (formData.selectedCategories.length === 0) {
+          setError("Please select at least one category");
+          return false;
+        }
+        return true;
+
+      case 4:
+        if (formData.availableDays.length === 0) {
+          setError("Please select at least one available day");
+          return false;
+        }
+        if (!formData.hourlyRate || parseFloat(formData.hourlyRate) <= 0) {
+          setError("Please set a valid hourly rate");
+          return false;
+        }
+        return true;
+
+      default:
+        return true;
+    }
   };
 
-  const toggleLanguage = (language: string) => {
-    setSelectedLanguages((prev) =>
-      prev.includes(language)
-        ? prev.filter((l) => l !== language)
-        : [...prev, language]
-    );
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, 4) as OnboardingStep);
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1) as OnboardingStep);
   };
 
   const handleSubmit = async () => {
-    // Validation
-    if (!name.trim() || !bio.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!validateStep(4)) return;
 
-    if (selectedCategoryIds.length === 0) {
-      toast({
-        title: "Validation Error",
-        description: "Please select at least one category",
-        variant: "destructive",
-      });
-      return;
-    }
+    setIsSubmitting(true);
+    setError("");
 
     try {
-      setIsSubmitting(true);
       await providerOnboardingApi.apply({
-        name,
-        bio,
-        description: description || undefined,
-        jobTitle: jobTitle || undefined,
-        company: company || undefined,
-        education: education || undefined,
-        location: location || undefined,
-        websiteUrl: websiteUrl || undefined,
-        linkedinUrl: linkedinUrl || undefined,
-        twitterUrl: twitterUrl || undefined,
-        githubUrl: githubUrl || undefined,
-        profilePictureUrl: profilePictureUrl || undefined,
-        bannerPictureUrl: bannerPictureUrl || undefined,
-        skills,
-        interests,
-        categoryIds: selectedCategoryIds,
-        availableDays: selectedDays,
-        availableTimes: selectedTimes,
-        availableLanguages: selectedLanguages,
+        jobTitle: formData.jobTitle,
+        bio: formData.bio,
+        location: formData.location,
+        linkedInUrl: formData.linkedInUrl || undefined,
+        twitterUrl: formData.twitterUrl || undefined,
+        websiteUrl: formData.websiteUrl || undefined,
+        industry: formData.industry,
+        yearsOfExperience: parseInt(formData.yearsOfExperience),
+        skills: formData.skills,
+        certifications: formData.certifications
+          ? formData.certifications.split(",").map((c) => c.trim())
+          : [],
+        categoryIds: formData.selectedCategories,
+        interests: formData.interests,
+        availableDays: formData.availableDays,
+        availableTimeStart: formData.availableTimeStart,
+        availableTimeEnd: formData.availableTimeEnd,
+        hourlyRate: parseFloat(formData.hourlyRate),
       });
 
-      toast({
-        title: "Success!",
-        description: "Your expert application has been submitted successfully",
-      });
-
-      // Redirect to expert dashboard
-      router.push("/expert");
-    } catch (error: any) {
-      console.error("Error submitting application:", error);
-      toast({
-        title: "Error",
-        description:
-          error.response?.data?.error || "Failed to submit application",
-        variant: "destructive",
-      });
+      router.push("/expert/onboarding/verify");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || "Failed to submit application. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const flatCategories = flattenCategories(categories);
-
-  if (isLoading) {
+  if (authLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-emerald-600" />
+          <p className="mt-2 text-slate-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (!canBecomeExpert) {
-    return null;
-  }
+  const steps = [
+    { number: 1, title: "Basic Info", icon: User },
+    { number: 2, title: "Professional", icon: Briefcase },
+    { number: 3, title: "Expertise", icon: Award },
+    { number: 4, title: "Availability", icon: Calendar },
+  ];
+
+  const benefits = [
+    {
+      icon: DollarSign,
+      title: "Earn on your terms",
+      description: "Set your own rates and work when you want",
+    },
+    {
+      icon: Users,
+      title: "Grow your network",
+      description: "Connect with seekers from around the world",
+    },
+    {
+      icon: TrendingUp,
+      title: "Build your reputation",
+      description: "Get reviews and build your expert profile",
+    },
+    {
+      icon: Shield,
+      title: "Secure payments",
+      description: "Get paid reliably for every session",
+    },
+  ];
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-4xl mx-auto">
-        {/* Hero Section */}
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold mb-4">Become an Expert</h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Share your knowledge and help others while earning money
-          </p>
+    <div className="min-h-screen bg-white">
+      <div className="grid min-h-screen lg:grid-cols-5">
+        {/* Left Panel - Benefits (2 cols) */}
+        <div className="hidden lg:flex lg:col-span-2 flex-col relative overflow-hidden bg-slate-900 text-white">
+          {/* Background effects */}
+          <div className="absolute inset-0">
+            <div className="absolute top-20 -left-20 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl" />
+            <div className="absolute bottom-40 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] border border-white/5 rounded-full" />
+          </div>
 
-          {/* Benefits */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6 text-center">
-                <Users className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                <p className="text-sm font-semibold">Connect with Seekers</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-green-50 border-green-200">
-              <CardContent className="pt-6 text-center">
-                <DollarSign className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                <p className="text-sm font-semibold">Earn Money</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-purple-50 border-purple-200">
-              <CardContent className="pt-6 text-center">
-                <Globe className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                <p className="text-sm font-semibold">Work Remotely</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-yellow-50 border-yellow-200">
-              <CardContent className="pt-6 text-center">
-                <Star className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
-                <p className="text-sm font-semibold">Build Reputation</p>
-              </CardContent>
-            </Card>
+          <div className="relative flex flex-col justify-between h-full px-10 py-12">
+            {/* Logo */}
+            <div>
+              <Link href="/" className="inline-flex items-center gap-2">
+                <span className="text-2xl font-bold">
+                  Answer Human<span className="text-emerald-400">.</span>
+                </span>
+              </Link>
+            </div>
+
+            {/* Main content */}
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20">
+                <Rocket className="w-4 h-4 text-emerald-400" />
+                <span className="text-sm">Become an Expert</span>
+              </div>
+
+              <h1 className="text-4xl font-bold leading-tight">
+                Share your knowledge,{" "}
+                <span className="text-emerald-400">earn income</span>
+              </h1>
+
+              <p className="text-lg text-slate-300 max-w-md">
+                Join thousands of experts helping people solve problems and get answers. Your expertise matters.
+              </p>
+
+              {/* Benefits grid */}
+              <div className="grid grid-cols-1 gap-4 pt-4">
+                {benefits.map((benefit, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <benefit.icon className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white">{benefit.title}</p>
+                      <p className="text-sm text-slate-400">{benefit.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+              <div className="flex items-center gap-1 mb-3">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+              <p className="text-slate-300 italic">
+                &quot;Becoming an expert on Answer Human was the best career decision I made. 
+                I&apos;ve helped hundreds of people and built a steady income stream.&quot;
+              </p>
+              <div className="mt-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center text-white font-medium">
+                  JK
+                </div>
+                <div>
+                  <p className="font-medium text-white">James Kim</p>
+                  <p className="text-sm text-slate-400">Tax Consultant • 2 years on platform</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Multi-step Form */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                {[1, 2, 3].map((step) => (
-                  <div key={step} className="flex items-center">
-                    <div
-                      className={cn(
-                        "h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold",
-                        currentStep >= step
-                          ? "bg-primary text-white"
-                          : "bg-gray-200 text-gray-500"
-                      )}
-                    >
-                      {currentStep > step ? (
-                        <CheckCircle className="h-5 w-5" />
-                      ) : (
-                        step
-                      )}
-                    </div>
-                    {step < 3 && (
+        {/* Right Panel - Form (3 cols) */}
+        <div className="lg:col-span-3 flex flex-col bg-slate-50">
+          {/* Header with steps */}
+          <div className="bg-white border-b border-slate-200 px-6 py-6">
+            <div className="max-w-2xl mx-auto">
+              {/* Mobile logo */}
+              <div className="lg:hidden mb-6">
+                <Link href="/" className="inline-flex items-center gap-2">
+                  <span className="text-xl font-bold text-slate-900">
+                    Answer Human<span className="text-emerald-600">.</span>
+                  </span>
+                </Link>
+              </div>
+
+              {/* Progress steps */}
+              <div className="flex items-center justify-between">
+                {steps.map((step, index) => (
+                  <div key={step.number} className="flex items-center">
+                    <div className="flex flex-col items-center">
                       <div
-                        className={cn(
-                          "h-1 w-8 mx-2",
-                          currentStep > step ? "bg-primary" : "bg-gray-200"
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                          currentStep >= step.number
+                            ? "bg-emerald-600 text-white"
+                            : "bg-slate-200 text-slate-500"
+                        }`}
+                      >
+                        {currentStep > step.number ? (
+                          <CheckCircle2 className="w-5 h-5" />
+                        ) : (
+                          <step.icon className="w-5 h-5" />
                         )}
+                      </div>
+                      <span
+                        className={`mt-2 text-xs font-medium ${
+                          currentStep >= step.number ? "text-emerald-600" : "text-slate-400"
+                        }`}
+                      >
+                        {step.title}
+                      </span>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={`w-16 sm:w-24 h-1 mx-2 rounded-full transition-all ${
+                          currentStep > step.number ? "bg-emerald-600" : "bg-slate-200"
+                        }`}
                       />
                     )}
                   </div>
                 ))}
               </div>
-              <span className="text-sm text-gray-500">
-                Step {currentStep} of 3
-              </span>
             </div>
-            <CardTitle>
-              {currentStep === 1 && "Basic Information"}
-              {currentStep === 2 && "Professional Details"}
-              {currentStep === 3 && "Availability & Categories"}
+          </div>
+
+          {/* Form content */}
+          <div className="flex-1 overflow-auto px-6 py-8">
+            <div className="max-w-2xl mx-auto">
+              {error && (
+                <div className="mb-6 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <span className="text-red-600 text-xs font-bold">!</span>
+                  </div>
+                  {error}
+                </div>
+              )}
+
+              {/* Step 1: Basic Info */}
+              {currentStep === 1 && (
+                <Card className="border-0 shadow-lg rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                        <User className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      Basic Information
             </CardTitle>
             <CardDescription>
-              {currentStep === 1 && "Tell us about yourself"}
-              {currentStep === 2 &&
-                "Share your professional background and links"}
-              {currentStep === 3 &&
-                "Set your availability and areas of expertise"}
+                      Tell us about yourself. This information will appear on your public profile.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Step 1: Basic Information */}
-            {currentStep === 1 && (
-              <>
                 <div className="space-y-2">
-                  <Label htmlFor="name">
-                    Full Name <span className="text-red-500">*</span>
+                      <Label className="text-slate-700">
+                        Professional Title <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="name"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
+                        placeholder="e.g., Senior Tax Consultant, UX Design Lead"
+                        value={formData.jobTitle}
+                        onChange={(e) => handleInputChange("jobTitle", e.target.value)}
+                        className="h-11 border-slate-200"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">
+                      <Label className="text-slate-700">
                     Bio <span className="text-red-500">*</span>
                   </Label>
                   <Textarea
-                    id="bio"
-                    placeholder="Tell us about yourself and your expertise..."
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    rows={4}
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    This will be displayed on your profile
+                        placeholder="Share your background, expertise, and what makes you unique. Minimum 50 characters."
+                        value={formData.bio}
+                        onChange={(e) => handleInputChange("bio", e.target.value)}
+                        className="min-h-32 border-slate-200"
+                      />
+                      <p className="text-xs text-slate-400">
+                        {formData.bio.length}/50 minimum characters
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Additional information about your services..."
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                  />
+                      <Label className="text-slate-700">Location</Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <Input
+                          placeholder="e.g., New York, USA"
+                          value={formData.location}
+                          onChange={(e) => handleInputChange("location", e.target.value)}
+                          className="h-11 pl-10 border-slate-200"
+                        />
+                      </div>
                 </div>
 
+                    <div className="grid sm:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-700">LinkedIn</Label>
+                        <Input
+                          placeholder="linkedin.com/in/..."
+                          value={formData.linkedInUrl}
+                          onChange={(e) => handleInputChange("linkedInUrl", e.target.value)}
+                          className="h-11 border-slate-200"
+                        />
+                      </div>
                 <div className="space-y-2">
-                  <Label htmlFor="profilePicture">Profile Picture URL</Label>
+                        <Label className="text-slate-700">Twitter</Label>
                   <Input
-                    id="profilePicture"
-                    type="url"
-                    placeholder="https://example.com/profile.jpg"
-                    value={profilePictureUrl}
-                    onChange={(e) => setProfilePictureUrl(e.target.value)}
+                          placeholder="twitter.com/..."
+                          value={formData.twitterUrl}
+                          onChange={(e) => handleInputChange("twitterUrl", e.target.value)}
+                          className="h-11 border-slate-200"
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="bannerPicture">Banner Picture URL</Label>
+                        <Label className="text-slate-700">Website</Label>
                   <Input
-                    id="bannerPicture"
-                    type="url"
-                    placeholder="https://example.com/banner.jpg"
-                    value={bannerPictureUrl}
-                    onChange={(e) => setBannerPictureUrl(e.target.value)}
+                          placeholder="yoursite.com"
+                          value={formData.websiteUrl}
+                          onChange={(e) => handleInputChange("websiteUrl", e.target.value)}
+                          className="h-11 border-slate-200"
                   />
                 </div>
-              </>
+                    </div>
+                  </CardContent>
+                </Card>
             )}
 
             {/* Step 2: Professional Details */}
             {currentStep === 2 && (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="border-0 shadow-lg rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <Briefcase className="w-5 h-5 text-blue-600" />
+                      </div>
+                      Professional Details
+                    </CardTitle>
+                    <CardDescription>
+                      Help seekers understand your qualifications and experience.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="jobTitle">Job Title</Label>
+                        <Label className="text-slate-700">
+                          Industry <span className="text-red-500">*</span>
+                        </Label>
                     <Input
-                      id="jobTitle"
-                      placeholder="Senior Developer"
-                      value={jobTitle}
-                      onChange={(e) => setJobTitle(e.target.value)}
+                          placeholder="e.g., Finance, Technology, Healthcare"
+                          value={formData.industry}
+                          onChange={(e) => handleInputChange("industry", e.target.value)}
+                          className="h-11 border-slate-200"
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
+                        <Label className="text-slate-700">
+                          Years of Experience <span className="text-red-500">*</span>
+                        </Label>
                     <Input
-                      id="company"
-                      placeholder="Tech Corp"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
+                          type="number"
+                          placeholder="e.g., 5"
+                          value={formData.yearsOfExperience}
+                          onChange={(e) => handleInputChange("yearsOfExperience", e.target.value)}
+                          className="h-11 border-slate-200"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="education">Education</Label>
-                  <Input
-                    id="education"
-                    placeholder="BS Computer Science, MIT"
-                    value={education}
-                    onChange={(e) => setEducation(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    placeholder="San Francisco, CA"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-                </div>
-
-                {/* Skills */}
-                <div className="space-y-2">
-                  <Label>Skills</Label>
+                    <div className="space-y-3">
+                      <Label className="text-slate-700">
+                        Skills <span className="text-red-500">*</span>
+                        <span className="text-slate-400 font-normal ml-2">(at least 3)</span>
+                      </Label>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Add a skill"
+                          placeholder="Add a skill..."
                       value={skillInput}
                       onChange={(e) => setSkillInput(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddSkill())}
-                    />
-                    <Button type="button" onClick={handleAddSkill}>
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
+                          className="h-11 border-slate-200"
+                        />
+                        <Button
+                          type="button"
+                          onClick={addSkill}
+                          variant="outline"
+                          className="h-11 px-6"
+                        >
                       Add
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {skills.map((skill) => (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.skills.map((skill) => (
                       <Badge
                         key={skill}
                         variant="secondary"
-                        className="cursor-pointer"
-                        onClick={() => handleRemoveSkill(skill)}
+                            className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer"
+                            onClick={() => removeSkill(skill)}
                       >
-                        {skill} ×
+                            {skill}
+                            <span className="ml-2 text-emerald-400">×</span>
                       </Badge>
                     ))}
                   </div>
                 </div>
 
-                {/* Interests */}
                 <div className="space-y-2">
-                  <Label>Interests</Label>
+                      <Label className="text-slate-700">Certifications</Label>
+                      <Input
+                        placeholder="e.g., CPA, AWS Certified, PMP (comma-separated)"
+                        value={formData.certifications}
+                        onChange={(e) => handleInputChange("certifications", e.target.value)}
+                        className="h-11 border-slate-200"
+                      />
+                      <p className="text-xs text-slate-400">
+                        Separate multiple certifications with commas
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Step 3: Categories & Expertise */}
+              {currentStep === 3 && (
+                <Card className="border-0 shadow-lg rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                        <Award className="w-5 h-5 text-purple-600" />
+                      </div>
+                      Areas of Expertise
+                    </CardTitle>
+                    <CardDescription>
+                      Select categories and interests that match your expertise.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                      <Label className="text-slate-700">
+                        Categories <span className="text-red-500">*</span>
+                      </Label>
+                      {isLoadingCategories ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {categories.map((category) => (
+                            <label
+                              key={category.id}
+                              className={`relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                formData.selectedCategories.includes(category.id)
+                                  ? "border-emerald-500 bg-emerald-50"
+                                  : "border-slate-200 hover:border-slate-300"
+                              }`}
+                            >
+                              <Checkbox
+                                checked={formData.selectedCategories.includes(category.id)}
+                                onCheckedChange={() => toggleCategory(category.id)}
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                                  formData.selectedCategories.includes(category.id)
+                                    ? "border-emerald-500 bg-emerald-500"
+                                    : "border-slate-300"
+                                }`}
+                              >
+                                {formData.selectedCategories.includes(category.id) && (
+                                  <CheckCircle2 className="w-4 h-4 text-white" />
+                                )}
+                              </div>
+                              <span className="text-sm font-medium text-slate-700">
+                                {category.name}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-slate-700">
+                        Interests & Topics
+                        <span className="text-slate-400 font-normal ml-2">(optional)</span>
+                      </Label>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Add an interest"
+                          placeholder="Add an interest..."
                       value={interestInput}
                       onChange={(e) => setInterestInput(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddInterest())}
-                    />
-                    <Button type="button" onClick={handleAddInterest}>
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addInterest())}
+                          className="h-11 border-slate-200"
+                        />
+                        <Button
+                          type="button"
+                          onClick={addInterest}
+                          variant="outline"
+                          className="h-11 px-6"
+                        >
                       Add
                     </Button>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {interests.map((interest) => (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.interests.map((interest) => (
                       <Badge
                         key={interest}
                         variant="secondary"
-                        className="cursor-pointer"
-                        onClick={() => handleRemoveInterest(interest)}
+                            className="px-3 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 cursor-pointer"
+                            onClick={() => removeInterest(interest)}
                       >
-                        {interest} ×
+                            {interest}
+                            <span className="ml-2 text-purple-400">×</span>
                       </Badge>
                     ))}
                   </div>
                 </div>
+                  </CardContent>
+                </Card>
+              )}
 
-                {/* Social Links */}
-                <div className="space-y-4">
-                  <Label>Social Links</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input
-                      placeholder="Website URL"
-                      value={websiteUrl}
-                      onChange={(e) => setWebsiteUrl(e.target.value)}
-                    />
-                    <Input
-                      placeholder="LinkedIn URL"
-                      value={linkedinUrl}
-                      onChange={(e) => setLinkedinUrl(e.target.value)}
-                    />
-                    <Input
-                      placeholder="Twitter URL"
-                      value={twitterUrl}
-                      onChange={(e) => setTwitterUrl(e.target.value)}
-                    />
-                    <Input
-                      placeholder="GitHub URL"
-                      value={githubUrl}
-                      onChange={(e) => setGithubUrl(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Step 3: Availability & Categories */}
-            {currentStep === 3 && (
-              <>
-                {/* Categories */}
-                <div className="space-y-2">
-                  <Label>
-                    Expertise Categories{" "}
-                    <span className="text-red-500">*</span>
+              {/* Step 4: Availability & Pricing */}
+              {currentStep === 4 && (
+                <Card className="border-0 shadow-lg rounded-2xl">
+                  <CardHeader>
+                    <CardTitle className="text-2xl flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-amber-600" />
+                      </div>
+                      Availability & Pricing
+                    </CardTitle>
+                    <CardDescription>
+                      Set your schedule and hourly rate for consultations.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                      <Label className="text-slate-700">
+                        Available Days <span className="text-red-500">*</span>
                   </Label>
-                  <p className="text-sm text-gray-500 mb-3">
-                    Select the areas you can help with
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {flatCategories.map((category) => (
-                      <Badge
-                        key={category.id}
-                        variant={
-                          selectedCategoryIds.includes(category.id)
-                            ? "default"
-                            : "outline"
-                        }
-                        className={cn(
-                          "cursor-pointer transition-colors",
-                          selectedCategoryIds.includes(category.id)
-                            ? "bg-primary hover:bg-primary/90"
-                            : "hover:bg-gray-100"
-                        )}
-                        onClick={() => toggleCategory(category.id)}
-                      >
-                        {category.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Available Days */}
-                <div className="space-y-2">
-                  <Label>Available Days</Label>
                   <div className="flex flex-wrap gap-2">
                     {DAYS_OF_WEEK.map((day) => (
-                      <Badge
+                          <button
                         key={day}
-                        variant={
-                          selectedDays.includes(day) ? "default" : "outline"
-                        }
-                        className={cn(
-                          "cursor-pointer transition-colors",
-                          selectedDays.includes(day)
-                            ? "bg-primary hover:bg-primary/90"
-                            : "hover:bg-gray-100"
-                        )}
+                            type="button"
                         onClick={() => toggleDay(day)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                              formData.availableDays.includes(day)
+                                ? "bg-emerald-600 text-white"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            }`}
                       >
                         {day.charAt(0) + day.slice(1).toLowerCase()}
-                      </Badge>
+                          </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Available Times */}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-slate-700 flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Available From
+                        </Label>
+                        <select
+                          value={formData.availableTimeStart}
+                          onChange={(e) => handleInputChange("availableTimeStart", e.target.value)}
+                          className="w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-slate-700"
+                        >
+                          {TIME_SLOTS.map((time) => (
+                            <option key={time} value={time}>
+                              {time}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                 <div className="space-y-2">
-                  <Label>Available Time Slots</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {DEFAULT_TIME_SLOTS.map((time) => (
-                      <Badge
-                        key={time}
-                        variant={
-                          selectedTimes.includes(time) ? "default" : "outline"
-                        }
-                        className={cn(
-                          "cursor-pointer transition-colors justify-center py-2",
-                          selectedTimes.includes(time)
-                            ? "bg-primary hover:bg-primary/90"
-                            : "hover:bg-gray-100"
-                        )}
-                        onClick={() => toggleTime(time)}
-                      >
+                        <Label className="text-slate-700 flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Available Until
+                        </Label>
+                        <select
+                          value={formData.availableTimeEnd}
+                          onChange={(e) => handleInputChange("availableTimeEnd", e.target.value)}
+                          className="w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-slate-700"
+                        >
+                          {TIME_SLOTS.map((time) => (
+                            <option key={time} value={time}>
                         {time}
-                      </Badge>
+                            </option>
                     ))}
+                        </select>
                   </div>
                 </div>
 
-                {/* Languages */}
                 <div className="space-y-2">
-                  <Label>Languages</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {LANGUAGES.map((language) => (
-                      <Badge
-                        key={language}
-                        variant={
-                          selectedLanguages.includes(language)
-                            ? "default"
-                            : "outline"
-                        }
-                        className={cn(
-                          "cursor-pointer transition-colors",
-                          selectedLanguages.includes(language)
-                            ? "bg-primary hover:bg-primary/90"
-                            : "hover:bg-gray-100"
-                        )}
-                        onClick={() => toggleLanguage(language)}
-                      >
-                        {language}
-                      </Badge>
-                    ))}
+                      <Label className="text-slate-700">
+                        Hourly Rate (USD) <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <Input
+                          type="number"
+                          placeholder="e.g., 75"
+                          value={formData.hourlyRate}
+                          onChange={(e) => handleInputChange("hourlyRate", e.target.value)}
+                          className="h-11 pl-10 border-slate-200"
+                        />
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Recommended: $50-$200/hour based on experience
+                      </p>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                      <h4 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-emerald-600" />
+                        Application Summary
+                      </h4>
+                      <div className="space-y-2 text-sm text-slate-600">
+                        <p>
+                          <span className="font-medium">Title:</span> {formData.jobTitle || "—"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Industry:</span> {formData.industry || "—"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Experience:</span>{" "}
+                          {formData.yearsOfExperience ? `${formData.yearsOfExperience} years` : "—"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Categories:</span>{" "}
+                          {formData.selectedCategories.length > 0
+                            ? categories
+                                .filter((c) => formData.selectedCategories.includes(c.id))
+                                .map((c) => c.name)
+                                .join(", ")
+                            : "—"}
+                        </p>
+                        <p>
+                          <span className="font-medium">Rate:</span>{" "}
+                          {formData.hourlyRate ? `$${formData.hourlyRate}/hour` : "—"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
                   </div>
                 </div>
-              </>
-            )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6 border-t">
-              {currentStep > 1 && (
+          {/* Footer with navigation */}
+          <div className="bg-white border-t border-slate-200 px-6 py-4">
+            <div className="max-w-2xl mx-auto flex items-center justify-between">
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                  disabled={isSubmitting}
-                >
+                variant="ghost"
+                onClick={prevStep}
+                disabled={currentStep === 1}
+                className="text-slate-600"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Button>
-              )}
-              {currentStep < 3 ? (
+
+              {currentStep < 4 ? (
                 <Button
-                  type="button"
-                  onClick={() => setCurrentStep(currentStep + 1)}
-                  className="ml-auto"
-                  disabled={
-                    (currentStep === 1 && (!name.trim() || !bio.trim()))
-                  }
+                  onClick={nextStep}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6"
                 >
-                  Next
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               ) : (
                 <Button
-                  type="button"
                   onClick={handleSubmit}
-                  disabled={
-                    isSubmitting ||
-                    !name.trim() ||
-                    !bio.trim() ||
-                    selectedCategoryIds.length === 0
-                  }
-                  className="ml-auto"
+                  disabled={isSubmitting}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Submitting...
                     </>
                   ) : (
-                    "Submit Application"
+                    <>
+                      <Zap className="w-4 h-4 mr-2" />
+                      Submit Application
+                    </>
                   )}
                 </Button>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-

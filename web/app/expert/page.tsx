@@ -151,10 +151,12 @@ export default function ExpertDashboardPage() {
 
   if (isLoading) {
     return (
+      <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto" />
           <p className="mt-2">Loading dashboard...</p>
+          </div>
         </div>
       </div>
     );
@@ -162,18 +164,20 @@ export default function ExpertDashboardPage() {
 
   if (!profile) {
     return (
-      <div className="container mx-auto px-4 py-20">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p>Profile not found. Please complete the expert application.</p>
-            <Button
-              onClick={() => router.push("/expert/onboarding")}
-              className="mt-4"
-            >
-              Become an Expert
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20">
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="py-12 text-center">
+              <p>Profile not found. Please complete the expert application.</p>
+              <Button
+                onClick={() => router.push("/expert/onboarding")}
+                className="mt-4"
+              >
+                Become an Expert
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -181,8 +185,9 @@ export default function ExpertDashboardPage() {
   // Verification check - if not verified, show pending verification page
   if (!profile.isVerified) {
     return (
+      <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-20">
-        <Card className="max-w-2xl mx-auto">
+          <Card className="max-w-2xl mx-auto border border-slate-200 shadow-sm">
           <CardContent className="py-12 text-center">
             <div className="h-20 w-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="h-10 w-10 text-yellow-600" />
@@ -208,6 +213,7 @@ export default function ExpertDashboardPage() {
             </Button>
           </CardContent>
         </Card>
+      </div>
       </div>
     );
   }
@@ -240,25 +246,28 @@ export default function ExpertDashboardPage() {
   }) || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Header with Profile Summary */}
-          <div className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-20 w-20 border-4 border-gray-200">
-              <AvatarImage
-                src={profile.profilePictureUrl || undefined}
-                alt={profile.name}
-              />
-                  <AvatarFallback className="bg-blue-600 text-white font-semibold text-2xl">
-                {getInitials(profile.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
+              <div className="flex items-start gap-4">
+                <Avatar className="h-20 w-20 border-4 border-slate-200">
+                  <AvatarImage
+                    src={profile.profilePictureUrl || undefined}
+                    alt={profile.name}
+                  />
+                  <AvatarFallback className="bg-emerald-600 text-white font-semibold text-2xl">
+                    {getInitials(profile.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
+                    Expert Dashboard
+                  </p>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-bold">{profile.name}</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900">{profile.name}</h1>
                     {profile.isVerified && (
                       <Badge className="bg-green-100 text-green-800 border-green-200">
                         <Shield className="h-3 w-3 mr-1" />
@@ -266,7 +275,7 @@ export default function ExpertDashboardPage() {
                       </Badge>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 mt-1">
+                  <div className="flex items-center gap-2 text-slate-600 mt-1">
                     {profile.jobTitle && (
                       <span className="flex items-center gap-1">
                         <Briefcase className="h-4 w-4" />
@@ -274,21 +283,21 @@ export default function ExpertDashboardPage() {
                       </span>
                     )}
                     {profile.company && (
-                      <span className="text-gray-400">at {profile.company}</span>
+                      <span className="text-slate-400">at {profile.company}</span>
                     )}
                   </div>
                   {profile.location && (
-                    <p className="text-gray-500 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-slate-500 text-sm mt-1 flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
                       {profile.location}
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2 mt-3">
-                {profile.categories?.slice(0, 3).map((cat: any) => (
-                  <Badge key={cat.id} variant="secondary">
-                    {cat.name}
-                  </Badge>
-                ))}
+                    {profile.categories?.slice(0, 3).map((cat: any) => (
+                      <Badge key={cat.id} variant="secondary">
+                        {cat.name}
+                      </Badge>
+                    ))}
                     {profile.categories?.length > 3 && (
                       <Badge variant="outline">+{profile.categories.length - 3}</Badge>
                     )}
@@ -310,58 +319,60 @@ export default function ExpertDashboardPage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">Total Appointments</p>
-                    <p className="text-2xl font-bold mt-1">{totalAppointments}</p>
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">Total Appointments</p>
+                    <p className="text-2xl font-semibold mt-1 text-slate-900">{totalAppointments}</p>
                   </div>
-                  <Calendar className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
+                  <Calendar className="h-8 w-8 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-gray-500">Pending</p>
-                    <p className="text-2xl font-bold mt-1">{pendingAppointments}</p>
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">Pending</p>
+                    <p className="text-2xl font-semibold mt-1 text-slate-900">{pendingAppointments}</p>
                   </div>
-                  <Clock className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
+                  <Clock className="h-8 w-8 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-gray-500">Completed</p>
-                    <p className="text-2xl font-bold mt-1">{completedAppointments}</p>
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">Completed</p>
+                    <p className="text-2xl font-semibold mt-1 text-slate-900">{completedAppointments}</p>
                   </div>
-                  <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
+                  <CheckCircle className="h-8 w-8 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-gray-500">Total Earnings</p>
-                    <p className="text-2xl font-bold mt-1">${totalEarnings.toFixed(2)}</p>
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">Total Earnings</p>
+                    <p className="text-2xl font-semibold mt-1 text-slate-900">
+                      ${totalEarnings.toFixed(2)}
+                    </p>
                   </div>
-                  <DollarSign className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  <DollarSign className="h-8 w-8 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Tabs Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 bg-white border border-slate-200">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="appointments">Appointments</TabsTrigger>
               <TabsTrigger value="payments">Payments</TabsTrigger>
@@ -388,7 +399,7 @@ export default function ExpertDashboardPage() {
                         {profile.appointments?.slice(0, 5).map((apt: any) => (
                           <div
                             key={apt.id}
-                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                            className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
                           >
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
@@ -440,7 +451,7 @@ export default function ExpertDashboardPage() {
                 {/* Quick Stats & Info */}
                 <div className="space-y-6">
                   {/* Earnings Summary */}
-                  <Card>
+                  <Card className="border border-slate-200 shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-lg">Earnings Summary</CardTitle>
                     </CardHeader>
@@ -462,7 +473,7 @@ export default function ExpertDashboardPage() {
                   </Card>
 
                   {/* Availability Status */}
-                  <Card>
+                  <Card className="border border-slate-200 shadow-sm">
                     <CardHeader>
                       <CardTitle className="text-lg">Availability</CardTitle>
                     </CardHeader>
@@ -494,7 +505,7 @@ export default function ExpertDashboardPage() {
 
             {/* Appointments Tab */}
             <TabsContent value="appointments">
-              <Card>
+              <Card className="border border-slate-200 shadow-sm">
                 <CardHeader>
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -538,7 +549,7 @@ export default function ExpertDashboardPage() {
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex items-start gap-4">
                               <Avatar className="h-12 w-12">
-                                <AvatarFallback className="bg-blue-100 text-blue-600">
+                                <AvatarFallback className="bg-emerald-50 text-emerald-600">
                                   {apt.knowledgeSeeker?.name?.charAt(0) || "?"}
                                 </AvatarFallback>
                               </Avatar>
@@ -610,7 +621,7 @@ export default function ExpertDashboardPage() {
             {/* Payments Tab */}
             <TabsContent value="payments">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <Card>
+                <Card className="border border-slate-200 shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -622,7 +633,7 @@ export default function ExpertDashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border border-slate-200 shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -634,7 +645,7 @@ export default function ExpertDashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border border-slate-200 shadow-sm">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -649,7 +660,7 @@ export default function ExpertDashboardPage() {
                 </Card>
               </div>
 
-              <Card>
+              <Card className="border border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle>Payment History</CardTitle>
                   <CardDescription>Track your earnings and payment status</CardDescription>
@@ -668,7 +679,7 @@ export default function ExpertDashboardPage() {
                       </thead>
                       <tbody>
                         {profile.appointments?.slice(0, 10).map((apt: any) => (
-                          <tr key={apt.id} className="border-b hover:bg-gray-50">
+                          <tr key={apt.id} className="border-b hover:bg-slate-50">
                             <td className="py-3 px-4">{formatDate(apt.appointmentDate)}</td>
                             <td className="py-3 px-4">{apt.knowledgeSeeker?.name || "Unknown"}</td>
                             <td className="py-3 px-4 text-sm text-gray-600">
@@ -701,19 +712,19 @@ export default function ExpertDashboardPage() {
 
             {/* Availability Tab */}
             <TabsContent value="availability">
-              <Card>
+              <Card className="border border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle>Manage Availability</CardTitle>
                   <CardDescription>Set when you're available for appointments</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Availability Status */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
                     <div>
                       <p className="font-medium">Availability Status</p>
                       <p className="text-sm text-gray-500">Toggle to pause new bookings</p>
                     </div>
-                    <Badge className={profile.isAvailable ? "bg-green-500 text-white" : "bg-gray-500 text-white"}>
+                    <Badge className={profile.isAvailable ? "bg-emerald-600 text-white" : "bg-slate-500 text-white"}>
                       {profile.isAvailable ? "Available" : "Unavailable"}
                     </Badge>
                   </div>
@@ -741,7 +752,7 @@ export default function ExpertDashboardPage() {
                     <p className="text-sm text-gray-500 mb-3">Your available time slots</p>
                     <div className="flex flex-wrap gap-2">
                       {profile.availableTimes?.map((time) => (
-                        <Badge key={time} variant="outline" className="bg-blue-50">
+                        <Badge key={time} variant="outline" className="bg-emerald-50">
                           <Clock className="h-3 w-3 mr-1" />
                           {time}
                         </Badge>

@@ -169,10 +169,12 @@ export default function RequestDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto text-purple-600" />
-          <p className="mt-4 text-lg font-medium">Loading request...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto text-emerald-600" />
+            <p className="mt-4 text-lg font-medium">Loading request...</p>
+          </div>
         </div>
       </div>
     );
@@ -180,44 +182,49 @@ export default function RequestDetailPage() {
 
   if (!question) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <div className="max-w-md mx-auto">
-          <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="h-10 w-10 text-gray-400" />
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="h-20 w-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="h-10 w-10 text-slate-400" />
+            </div>
+            <h2 className="text-2xl font-semibold mb-4">Request Not Found</h2>
+            <Button onClick={() => router.push("/expert/requests")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Requests
+            </Button>
           </div>
-          <h2 className="text-2xl font-bold mb-4">Request Not Found</h2>
-          <Button onClick={() => router.push("/expert/requests")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Requests
-          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 py-10">
+    <div className="min-h-screen bg-slate-50 py-10">
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <Button
             variant="ghost"
             onClick={() => router.push("/expert/requests")}
-            className="mb-4 hover:bg-white/80 transition-all hover:scale-105"
+            className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Requests
           </Button>
 
-          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl p-8 text-white shadow-xl">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <MessageSquare className="h-7 w-7" />
+                <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <MessageSquare className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold">Request Details</h1>
-                  <p className="text-blue-100 mt-1">
+                  <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
+                    Request Details
+                  </p>
+                  <h1 className="text-3xl font-semibold text-slate-900">Request Details</h1>
+                  <p className="text-slate-600 mt-1">
                     Submitted on {formatDate(question.createdAt)}
                   </p>
                 </div>
@@ -231,25 +238,25 @@ export default function RequestDetailPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Question Details */}
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
+            <Card className="border border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-200">
                 <CardTitle className="text-2xl">{question.questionTitle}</CardTitle>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 {/* Category & Tags */}
                 <div>
-                  <Label className="text-sm font-bold text-gray-700 mb-3 block">
+                  <Label className="text-sm font-semibold text-slate-700 mb-3 block">
                     Category & Tags
                   </Label>
                   <div className="flex flex-wrap gap-2">
-                    <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 text-sm px-4 py-2">
+                    <Badge className="bg-emerald-600 text-white border-0 text-sm px-4 py-2">
                       {question.questionCategory}
                     </Badge>
                     {question.questionTags.map((tag, idx) => (
                       <Badge
                         key={idx}
                         variant="outline"
-                        className="bg-purple-50 text-purple-700 border-purple-200 font-medium text-sm px-3 py-1.5"
+                        className="bg-slate-50 text-slate-700 border-slate-200 font-medium text-sm px-3 py-1.5"
                       >
                         {tag}
                       </Badge>
@@ -259,11 +266,11 @@ export default function RequestDetailPage() {
 
                 {/* Description */}
                 <div>
-                  <Label className="text-sm font-bold text-gray-700 mb-3 block">
+                  <Label className="text-sm font-semibold text-slate-700 mb-3 block">
                     Question Description
                   </Label>
-                  <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-100">
-                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                  <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                    <p className="text-slate-700 whitespace-pre-line leading-relaxed">
                       {question.questionDescription}
                     </p>
                   </div>
@@ -272,7 +279,7 @@ export default function RequestDetailPage() {
                 {/* Answer Section */}
                 {question.questionStatus === "PENDING" && (
                   <div className="pt-6 border-t">
-                    <Label className="text-base font-bold text-gray-800 mb-3 block">
+                    <Label className="text-base font-semibold text-slate-800 mb-3 block">
                       Provide Your Answer
                     </Label>
                     <Textarea
@@ -280,12 +287,12 @@ export default function RequestDetailPage() {
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}
                       rows={8}
-                      className="border-2 focus:border-purple-400 rounded-xl resize-none mb-4"
+                      className="rounded-xl resize-none mb-4"
                     />
                     <Button
                       onClick={handleSubmitAnswer}
                       disabled={isSubmitting || !answer.trim()}
-                      className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 h-12 text-base font-bold"
+                      className="w-full h-12 text-base font-semibold"
                     >
                       {isSubmitting ? (
                         <>
@@ -304,7 +311,7 @@ export default function RequestDetailPage() {
 
                 {question.questionStatus === "ANSWERED" && (
                   <div className="pt-6 border-t">
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+                    <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
                       <div className="flex items-center gap-3 mb-2">
                         <CheckCircle className="h-6 w-6 text-green-600" />
                         <h3 className="text-lg font-bold text-green-800">
@@ -324,46 +331,46 @@ export default function RequestDetailPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Seeker Info */}
-            <Card className="border-0 shadow-xl overflow-hidden">
-              <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-6 text-white">
-                <CardTitle className="text-xl font-bold mb-1">
+            <Card className="border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-50 p-6 border-b border-slate-200">
+                <CardTitle className="text-xl font-semibold text-slate-900 mb-1">
                   Seeker Information
                 </CardTitle>
-                <p className="text-blue-100 text-sm">
+                <p className="text-slate-600 text-sm">
                   About the person who asked
                 </p>
               </div>
               <CardContent className="pt-6 space-y-4">
                 {/* Profile */}
-                <div className="flex items-center gap-4 pb-4 border-b">
-                  <Avatar className="h-16 w-16 border-4 border-white shadow-lg ring-2 ring-purple-100">
+                <div className="flex items-center gap-4 pb-4 border-b border-slate-200">
+                  <Avatar className="h-16 w-16 border-2 border-slate-200">
                     <AvatarImage
                       src={question.knowledgeSeeker?.profilePictureUrl || undefined}
                     />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-bold">
+                    <AvatarFallback className="bg-emerald-600 text-white text-lg font-bold">
                       {question.knowledgeSeeker
                         ? getInitials(question.knowledgeSeeker.name)
                         : "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-bold text-lg text-gray-800">
+                    <p className="font-semibold text-lg text-slate-900">
                       {question.knowledgeSeeker?.name || "Anonymous"}
                     </p>
-                    <p className="text-sm text-gray-500">Knowledge Seeker</p>
+                    <p className="text-sm text-slate-500">Knowledge Seeker</p>
                   </div>
                 </div>
 
                 {/* Contact Info */}
                 {question.knowledgeSeeker && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                        <Mail className="h-5 w-5 text-blue-600" />
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                        <Mail className="h-5 w-5 text-emerald-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500 font-semibold">Email</p>
-                        <p className="text-sm text-gray-800 truncate">
+                        <p className="text-xs text-slate-500 font-semibold">Email</p>
+                        <p className="text-sm text-slate-800 truncate">
                           {question.knowledgeSeeker.email}
                         </p>
                       </div>
@@ -374,10 +381,10 @@ export default function RequestDetailPage() {
             </Card>
 
             {/* Timeline */}
-            <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-purple-600" />
+            <Card className="border border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-200">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
+                  <Clock className="h-5 w-5 text-emerald-600" />
                   Timeline
                 </CardTitle>
               </CardHeader>
@@ -390,8 +397,8 @@ export default function RequestDetailPage() {
                     <div className="w-0.5 h-full bg-gray-200 my-2" />
                   </div>
                   <div className="flex-1 pb-6">
-                    <p className="font-bold text-gray-800">Question Posted</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="font-semibold text-slate-800">Question Posted</p>
+                    <p className="text-sm text-slate-500 mt-1">
                       {formatDate(question.createdAt)}
                     </p>
                   </div>
@@ -405,8 +412,8 @@ export default function RequestDetailPage() {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-gray-800">Last Updated</p>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="font-semibold text-slate-800">Last Updated</p>
+                      <p className="text-sm text-slate-500 mt-1">
                         {formatDate(question.updatedAt)}
                       </p>
                     </div>

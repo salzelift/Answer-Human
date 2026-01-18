@@ -191,10 +191,12 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading profile...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading profile...</p>
+          </div>
         </div>
       </div>
     );
@@ -202,23 +204,51 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="container mx-auto px-4 py-20">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p>Profile not found. Please contact support.</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20">
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="py-12 text-center">
+              <p>Profile not found. Please contact support.</p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold mb-6">My Profile</h1>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={profile.profilePictureUrl || undefined} />
+                    <AvatarFallback>{getInitials(profile.name)}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
+                      Seeker Profile
+                    </p>
+                    <h1 className="text-2xl font-semibold text-slate-900">{profile.name}</h1>
+                    <p className="text-sm text-slate-500">@{profile.user.username}</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => router.push("/appointments")}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
+                  View appointments
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>

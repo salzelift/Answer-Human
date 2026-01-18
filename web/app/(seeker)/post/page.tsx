@@ -29,6 +29,7 @@ import { getCategories } from "@/lib/get-categories";
 import { flattenCategories } from "@/lib/category-utils";
 import { Category } from "@/types/category.types";
 import { cn } from "@/lib/utils";
+import { getSocket } from "@/lib/socket";
 
 export default function PostPage() {
   const router = useRouter();
@@ -67,6 +68,26 @@ export default function PostPage() {
       }
     };
     loadData();
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNewQuestion = (question: Question) => {
+      setQuestions((prev) => {
+        if (prev.some((q) => q.id === question.id)) {
+          return prev;
+        }
+        return [question, ...prev];
+      });
+    };
+
+    socket.on("question:new", handleNewQuestion);
+
+    return () => {
+      socket.off("question:new", handleNewQuestion);
+    };
   }, []);
 
   useEffect(() => {
@@ -185,30 +206,63 @@ export default function PostPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-10">
-        <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-10">
+          <div className="text-center">Loading...</div>
+        </div>
       </div>
     );
   }
 
+  const totalQuestions = questions.length;
+  const pendingCount = questions.filter((q) => q.questionStatus === QuestionStatus.PENDING).length;
+  const answeredCount = questions.filter((q) => q.questionStatus === QuestionStatus.ANSWERED).length;
+
   return (
-    <div className="container mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold mb-6">My Questions</h1>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">Seeker</p>
+            <h1 className="text-3xl font-semibold text-slate-900">My Questions</h1>
+            <p className="text-slate-600 mt-2">
+              Track proposals and manage your open requests.
+            </p>
+          </div>
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            size="lg"
+            className="w-full sm:w-auto"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Post a Question
+          </Button>
+        </div>
 
-      {/* Post Button Bar */}
-      <div className="mb-6">
-        <Button
-          onClick={() => setIsDialogOpen(true)}
-          size="lg"
-          className="w-full sm:w-auto"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Post a Question
-        </Button>
-      </div>
+        <div className="grid gap-4 md:grid-cols-3 mt-6">
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-500">Total questions</p>
+              <p className="text-2xl font-semibold text-slate-900">{totalQuestions}</p>
+            </CardContent>
+          </Card>
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-500">Pending</p>
+              <p className="text-2xl font-semibold text-slate-900">{pendingCount}</p>
+            </CardContent>
+          </Card>
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="pt-6">
+              <p className="text-sm text-slate-500">Answered</p>
+              <p className="text-2xl font-semibold text-slate-900">{answeredCount}</p>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Search and Filters */}
-      <div className="mb-6 space-y-4">
+        {/* Search and Filters */}
+        <Card className="mt-6 border border-slate-200 shadow-sm">
+          <CardContent className="pt-6 space-y-4">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -285,7 +339,8 @@ export default function PostPage() {
             </select>
           </div>
         </div>
-      </div>
+          </CardContent>
+        </Card>
 
       {/* Questions List */}
       {filteredQuestions.length === 0 ? (
@@ -295,12 +350,12 @@ export default function PostPage() {
             : "No questions yet. Post your first question!"}
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-4 mt-6">
           {filteredQuestions.map((question) => (
             <Card
               key={question.id}
               onClick={() => handleCardClick(question.id)}
-              className="cursor-pointer hover:shadow-lg transition-shadow"
+              className="cursor-pointer border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
             >
               <CardHeader>
                 <div className="flex items-start justify-between gap-4">
@@ -457,6 +512,7 @@ export default function PostPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

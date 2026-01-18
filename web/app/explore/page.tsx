@@ -137,26 +137,47 @@ export default function ExplorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       {/* HERO */}
-      <section className="bg-black text-white">
-        <div className="container mx-auto px-4 py-14 md:py-20">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-light max-w-4xl">
-            Find the best experts for your needs
-          </h1>
-          <p className="text-lg sm:text-xl md:text-2xl mt-4 text-white/80">
-            Our experts will take it from here.
-          </p>
+      <section className="bg-white border-b border-slate-200">
+        <div className="container mx-auto px-4 py-12 md:py-16">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
+                Marketplace
+              </p>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold text-slate-900">
+                Find verified experts for every challenge.
+              </h1>
+              <p className="text-base sm:text-lg mt-4 text-slate-600">
+                Compare profiles, read reviews, and book trusted professionals in minutes.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 text-sm text-slate-600">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                Vetted experts
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                Secure payments
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                On-time sessions
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                Verified reviews
+              </div>
+            </div>
+          </div>
 
           {/* Search */}
           <div className="relative mt-8 max-w-3xl">
             <Input
               placeholder="Search for an expert"
-              className="h-14 pr-14 text-base sm:text-lg bg-white"
+              className="h-14 pr-14 text-base sm:text-lg bg-white border-slate-200"
               value={searchQuery}
               onChange={handleSearch}
             />
-            <SearchIcon className="absolute right-4 top-1/2 -translate-y-1/2 bg-primary text-white p-2 rounded-md h-9 w-9" />
+            <SearchIcon className="absolute right-4 top-1/2 -translate-y-1/2 bg-emerald-600 text-white p-2 rounded-md h-9 w-9" />
           </div>
 
           {/* Categories */}
@@ -164,10 +185,10 @@ export default function ExplorePage() {
             {categories.map((category) => (
               <div
                 key={category.id}
-                className="relative flex items-center justify-between rounded-lg bg-white/10 hover:bg-white/20 transition p-4 cursor-pointer"
+                className="relative flex items-center justify-between rounded-xl border border-slate-200 bg-white hover:border-emerald-200 hover:shadow-sm transition p-4 cursor-pointer"
               >
-                <span className="text-sm sm:text-base">{category.name}</span>
-                <MoveRightIcon className="h-4 w-4" />
+                <span className="text-sm sm:text-base text-slate-700">{category.name}</span>
+                <MoveRightIcon className="h-4 w-4 text-slate-400" />
               </div>
             ))}
           </div>

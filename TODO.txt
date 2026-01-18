@@ -1,0 +1,21 @@
+TODO:
+    
+    1: In the Navbar when the user is in seeker dashboard, in that the user should see the navbar related to the seekers such as post explore and Expert dashboard
+
+    2: The Feed Page mneeds to be made using SocketIO/Websocket which will show the questions posted by the user in realtime and filtered according to expert's expertise and interests
+
+    3: The seekers post/:id page should also be equipped with socket connection such that seekers can see there answers proposals in real time
+
+    4: When user gets any proposal for any question it also gets an email for the same
+
+    5: When the expert gets any type of the appointment then the too it gets and email as notification
+
+
+
+BUGS:
+
+    1: expert/profile/edit is redirecting back to the /expert page
+
+    2: expert/profile is empty, it has to show user profile and button for expert rofile edit
+
+    3: 

@@ -137,32 +137,65 @@ export default function AppointmentsPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading appointments...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading appointments...</p>
+          </div>
         </div>
       </div>
     );
   }
 
+  const totalAppointments = appointments.length;
+  const upcomingAppointments = appointments.filter((apt) =>
+    ["PENDING", "CONFIRMED"].includes(apt.appointmentStatus)
+  ).length;
+  const cancelledAppointments = appointments.filter(
+    (apt) => apt.appointmentStatus === "CANCELLED"
+  ).length;
+
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">My Appointments</h1>
-            <p className="text-gray-600 mt-1">
-              Manage and track all your appointments
-            </p>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-8">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
+                Appointments
+              </p>
+              <h1 className="text-3xl font-semibold text-slate-900">My Appointments</h1>
+              <p className="text-slate-600 mt-2">
+                Manage and track all your appointments
+              </p>
+            </div>
+            <Button onClick={() => router.push("/explore")}>Book New Appointment</Button>
           </div>
-          <Button onClick={() => router.push("/explore")}>
-            Book New Appointment
-          </Button>
-        </div>
+
+          <div className="grid gap-4 md:grid-cols-3 mb-6">
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <p className="text-sm text-slate-500">Total</p>
+                <p className="text-2xl font-semibold text-slate-900">{totalAppointments}</p>
+              </CardContent>
+            </Card>
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <p className="text-sm text-slate-500">Upcoming</p>
+                <p className="text-2xl font-semibold text-slate-900">{upcomingAppointments}</p>
+              </CardContent>
+            </Card>
+            <Card className="border border-slate-200 shadow-sm">
+              <CardContent className="pt-6">
+                <p className="text-sm text-slate-500">Cancelled</p>
+                <p className="text-2xl font-semibold text-slate-900">{cancelledAppointments}</p>
+              </CardContent>
+            </Card>
+          </div>
 
         {/* Filters */}
-        <Card className="mb-6">
+        <Card className="mb-6 border border-slate-200 shadow-sm">
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Search */}
@@ -207,7 +240,7 @@ export default function AppointmentsPage() {
 
         {/* Appointments List */}
         {filteredAppointments.length === 0 ? (
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardContent className="py-12 text-center text-gray-500">
               <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <p className="text-lg font-semibold mb-2">No appointments found</p>
@@ -231,7 +264,7 @@ export default function AppointmentsPage() {
             {filteredAppointments.map((appointment) => (
               <Card
                 key={appointment.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => router.push(`/appointments/${appointment.id}`)}
               >
                 <CardContent className="pt-6">

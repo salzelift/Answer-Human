@@ -74,8 +74,7 @@ export default function EditExpertProfilePage() {
   const loadProfile = async () => {
     try {
       setIsLoading(true);
-      const response = await providerOnboardingApi.getProfile();
-      const profile = response.provider;
+      const profile = await providerOnboardingApi.getProfile();
 
       setName(profile.name || "");
       setBio(profile.bio || "");
@@ -92,12 +91,19 @@ export default function EditExpertProfilePage() {
       setSelectedLanguages(profile.availableLanguages || []);
     } catch (error: any) {
       console.error("Error loading profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile",
-        variant: "destructive",
-      });
-      router.push("/expert");
+      if (error.response?.status === 404) {
+        toast({
+          title: "Profile not found",
+          description: "Complete expert onboarding to edit your profile.",
+        });
+        router.push("/expert/onboarding");
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to load profile",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -143,17 +149,19 @@ export default function EditExpertProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading profile...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading profile...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-slate-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         <Button
           variant="ghost"
@@ -166,7 +174,7 @@ export default function EditExpertProfilePage() {
 
         <div className="space-y-6">
           {/* Basic Info */}
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
               <CardDescription>Your public profile information</CardDescription>
@@ -236,7 +244,7 @@ export default function EditExpertProfilePage() {
           </Card>
 
           {/* Skills */}
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Skills</CardTitle>
               <CardDescription>Add your expertise areas</CardDescription>
@@ -270,7 +278,7 @@ export default function EditExpertProfilePage() {
           </Card>
 
           {/* Availability */}
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Availability</CardTitle>
               <CardDescription>Set when you're available for appointments</CardDescription>
@@ -310,7 +318,7 @@ export default function EditExpertProfilePage() {
           </Card>
 
           {/* Social Links */}
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Social Links</CardTitle>
               <CardDescription>Connect your profiles</CardDescription>

@@ -137,31 +137,41 @@ export default function PreferencesPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading preferences...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading preferences...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-4xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/profile")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Profile
-        </Button>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/profile")}
+            className="w-fit"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Profile
+          </Button>
 
-        <h1 className="text-3xl font-bold mb-6">Preferences</h1>
+          <Card className="border border-slate-200 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-2xl">Preferences</CardTitle>
+              <CardDescription>
+                Shape how experts respond to your requests.
+              </CardDescription>
+            </CardHeader>
+          </Card>
 
         <Tabs defaultValue="communication" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
             <TabsTrigger value="communication">Communication</TabsTrigger>
             <TabsTrigger value="learning">Learning</TabsTrigger>
             <TabsTrigger value="booking">Booking</TabsTrigger>
@@ -169,7 +179,7 @@ export default function PreferencesPage() {
 
           {/* Communication Preferences */}
           <TabsContent value="communication" className="space-y-6">
-            <Card>
+            <Card className="border border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Communication Preferences</CardTitle>
                 <CardDescription>
@@ -287,7 +297,7 @@ export default function PreferencesPage() {
 
           {/* Learning Preferences */}
           <TabsContent value="learning" className="space-y-6">
-            <Card>
+            <Card className="border border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Learning Preferences</CardTitle>
                 <CardDescription>
@@ -361,7 +371,7 @@ export default function PreferencesPage() {
 
           {/* Booking Preferences */}
           <TabsContent value="booking" className="space-y-6">
-            <Card>
+            <Card className="border border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Booking Preferences</CardTitle>
                 <CardDescription>

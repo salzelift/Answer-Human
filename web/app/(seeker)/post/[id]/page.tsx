@@ -31,6 +31,7 @@ import { Proposal } from "@/types/proposal.types";
 import { CommunicationMedium } from "@/types/expert.types";
 import { getQuestionById } from "@/lib/get-questions";
 import { getProposalsByQuestionId } from "@/lib/get-proposals";
+import { getSocket } from "@/lib/socket";
 
 export default function QuestionDetailPage() {
   const params = useParams();
@@ -66,6 +67,38 @@ export default function QuestionDetailPage() {
     if (questionId) {
       loadData();
     }
+  }, [questionId]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !questionId) return;
+
+    const room = `question:${questionId}`;
+    socket.emit("room:join", room);
+
+    const handleNewProposal = (proposal: Proposal) => {
+      if (proposal.questionId !== questionId) return;
+      setProposals((prev) => {
+        if (prev.some((p) => p.id === proposal.id)) {
+          return prev;
+        }
+        return [proposal, ...prev];
+      });
+    };
+
+    const handleQuestionUpdate = (updatedQuestion: Question) => {
+      if (updatedQuestion.id !== questionId) return;
+      setQuestion(updatedQuestion);
+    };
+
+    socket.on("proposal:new", handleNewProposal);
+    socket.on("question:update", handleQuestionUpdate);
+
+    return () => {
+      socket.emit("room:leave", room);
+      socket.off("proposal:new", handleNewProposal);
+      socket.off("question:update", handleQuestionUpdate);
+    };
   }, [questionId]);
 
   const formatDate = (date: Date | string) => {
@@ -137,37 +170,42 @@ export default function QuestionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-10">
-        <div className="text-center">Loading...</div>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-10">
+          <div className="text-center">Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (!question) {
     return (
-      <div className="container mx-auto px-4 py-10">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-2">Question Not Found</h1>
-          <Button onClick={() => router.push("/post")}>Back to Questions</Button>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-10">
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold mb-2">Question Not Found</h1>
+            <Button onClick={() => router.push("/post")}>Back to Questions</Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => router.push("/post")}
-        className="mb-6"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Questions
-      </Button>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/post")}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Questions
+        </Button>
 
       {/* Question Details */}
-      <Card className="mb-8">
+      <Card className="mb-8 border border-slate-200 shadow-sm">
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
@@ -238,7 +276,7 @@ export default function QuestionDetailPage() {
           Expert Proposals ({proposals.length})
         </h2>
         {proposals.length === 0 ? (
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardContent className="py-12 text-center text-gray-500">
               <p>No proposals yet. Experts will submit their proposals here.</p>
             </CardContent>
@@ -246,7 +284,10 @@ export default function QuestionDetailPage() {
         ) : (
           <div className="grid gap-6">
             {proposals.map((proposal) => (
-              <Card key={proposal.id} className="hover:shadow-lg transition-shadow">
+              <Card
+                key={proposal.id}
+                className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+              >
                 <CardHeader>
                   <div className="flex items-start gap-4">
                     {/* Expert Avatar */}
@@ -354,6 +395,7 @@ export default function QuestionDetailPage() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }

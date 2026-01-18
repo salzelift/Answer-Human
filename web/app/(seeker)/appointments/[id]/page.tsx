@@ -156,10 +156,12 @@ export default function AppointmentDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="mt-2">Loading appointment...</p>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20 flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+            <p className="mt-2">Loading appointment...</p>
+          </div>
         </div>
       </div>
     );
@@ -167,36 +169,39 @@ export default function AppointmentDetailPage() {
 
   if (!appointment) {
     return (
-      <div className="container mx-auto px-4 py-20">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p>Appointment not found</p>
-            <Button
-              onClick={() => router.push("/appointments")}
-              className="mt-4"
-            >
-              Back to Appointments
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-50">
+        <div className="container mx-auto px-4 py-20">
+          <Card className="border border-slate-200 shadow-sm">
+            <CardContent className="py-12 text-center">
+              <p>Appointment not found</p>
+              <Button
+                onClick={() => router.push("/appointments")}
+                className="mt-4"
+              >
+                Back to Appointments
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-10">
-      <div className="max-w-4xl mx-auto">
-        <Button
-          variant="ghost"
-          onClick={() => router.push("/appointments")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Appointments
-        </Button>
+    <div className="min-h-screen bg-slate-50">
+      <div className="container mx-auto px-4 py-10">
+        <div className="max-w-4xl mx-auto">
+          <Button
+            variant="ghost"
+            onClick={() => router.push("/appointments")}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Appointments
+          </Button>
 
-        {/* Header Card */}
-        <Card className="mb-6">
+          {/* Header Card */}
+          <Card className="mb-6 border border-slate-200 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4 mb-6">
               <Avatar className="h-20 w-20 border-4 border-gray-200">
@@ -258,7 +263,7 @@ export default function AppointmentDetailPage() {
         {/* Appointment Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           {/* Date & Time */}
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
@@ -282,7 +287,7 @@ export default function AppointmentDetailPage() {
           </Card>
 
           {/* Communication */}
-          <Card>
+          <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 {getMediumIcon(appointment.communicationMedium)}
@@ -307,7 +312,7 @@ export default function AppointmentDetailPage() {
 
         {/* Question Details */}
         {appointment.questions && (
-          <Card className="mb-6">
+          <Card className="mb-6 border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Question Details</CardTitle>
             </CardHeader>
@@ -344,7 +349,7 @@ export default function AppointmentDetailPage() {
         )}
 
         {/* Expert Information */}
-        <Card className="mb-6">
+        <Card className="mb-6 border border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle>Expert Information</CardTitle>
           </CardHeader>
@@ -395,7 +400,7 @@ export default function AppointmentDetailPage() {
         </Card>
 
         {/* Payment Information */}
-        <Card>
+        <Card className="border border-slate-200 shadow-sm">
           <CardHeader>
             <CardTitle>Payment Information</CardTitle>
           </CardHeader>
@@ -446,6 +451,7 @@ export default function AppointmentDetailPage() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
