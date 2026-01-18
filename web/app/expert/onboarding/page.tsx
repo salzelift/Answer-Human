@@ -84,7 +84,7 @@ export default function ExpertOnboardingPage() {
     jobTitle: "",
     bio: "",
     location: "",
-    linkedInUrl: "",
+    linkedinUrl: "",
     twitterUrl: "",
     websiteUrl: "",
 
@@ -276,7 +276,7 @@ export default function ExpertOnboardingPage() {
         jobTitle: formData.jobTitle,
         bio: formData.bio,
         location: formData.location,
-        linkedInUrl: formData.linkedInUrl || undefined,
+        linkedinUrl: formData.linkedinUrl || undefined,
         twitterUrl: formData.twitterUrl || undefined,
         websiteUrl: formData.websiteUrl || undefined,
         industry: formData.industry,
@@ -549,8 +549,8 @@ export default function ExpertOnboardingPage() {
                         <Label className="text-slate-700">LinkedIn</Label>
                         <Input
                           placeholder="linkedin.com/in/..."
-                          value={formData.linkedInUrl}
-                          onChange={(e) => handleInputChange("linkedInUrl", e.target.value)}
+                          value={formData.linkedinUrl}
+                          onChange={(e) => handleInputChange("linkedinUrl", e.target.value)}
                           className="h-11 border-slate-200"
                         />
                       </div>

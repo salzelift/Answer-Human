@@ -280,7 +280,7 @@ export default function AppointmentsPage() {
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-primary">
-                            ${(appointment.totalPayment || appointment.totalPaymemnt || 0).toString()}
+                            ${(appointment.totalPaymemnt || 0).toString()}
                           </p>
                         </div>
                       </div>
@@ -381,7 +381,7 @@ export default function AppointmentsPage() {
                       .filter((a) => a.paymentStatus === "PAID")
                       .reduce(
                         (sum, a) =>
-                          sum + parseFloat((a.totalPayment || a.totalPaymemnt || 0).toString()),
+                          sum + parseFloat((a.totalPaymemnt || 0).toString()),
                         0
                       )
                       .toFixed(2)}

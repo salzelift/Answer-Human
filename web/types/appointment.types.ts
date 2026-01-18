@@ -49,6 +49,9 @@ export interface Appointment {
     name: string;
     profilePictureUrl?: string | null;
     description?: string | null;
+    jobTitle?: string | null;
+    company?: string | null;
+    location?: string | null;
   };
   knowledgeSeeker?: {
     id: string;
@@ -58,6 +61,8 @@ export interface Appointment {
   questions?: {
     id: string;
     questionTitle: string;
+    questionDescription?: string;
+    questionTags?: string[];
   };
 }
 

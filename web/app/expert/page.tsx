@@ -50,6 +50,7 @@ interface AppointmentItem {
   totalPaymemnt?: number | string;
   appointmentDate: string;
   appointmentTime: string;
+  communicationMedium?: string;
   knowledgeSeeker?: { name: string };
   questions?: { questionTitle: string };
 }

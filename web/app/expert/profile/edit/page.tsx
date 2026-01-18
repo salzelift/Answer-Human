@@ -49,6 +49,7 @@ export default function EditExpertProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form state
   const [name, setName] = useState("");

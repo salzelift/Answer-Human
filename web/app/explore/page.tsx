@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import FilterSidebar from "@/components/explore/filterSidebar";
 import { parseFilters, ExploreFilters } from "@/lib/filters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MoveRightIcon, SearchIcon, SlidersHorizontal } from "lucide-react";
+import { MoveRightIcon, SearchIcon, SlidersHorizontal, Loader2 } from "lucide-react";
 import { getCategories } from "@/lib/get-categories";
 import { getExperts } from "@/lib/get-experts";
 import { Category } from "@/types/category.types";
@@ -14,7 +14,7 @@ import { KnowledgeProvider } from "@/types/expert.types";
 import ExpertCard from "@/components/expert-card";
 import clsx from "clsx";
 
-export default function ExplorePage() {
+function ExplorePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -268,5 +268,22 @@ export default function ExplorePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-emerald-600" />
+            <p className="mt-2 text-slate-600">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <ExplorePageContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 import { KnowledgeProvider } from "@/types/expert.types";
-import { providerApi } from "./api/provider";
+import { providerApi, GetExpertsParams } from "./api/provider";
 
 // Mock data for fallback
   const now = new Date();

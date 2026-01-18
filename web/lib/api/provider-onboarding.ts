@@ -1,7 +1,7 @@
 import api from "../axios";
 
 export interface ProviderOnboardingData {
-  name: string;
+  name?: string;
   description?: string;
   websiteUrl?: string;
   linkedinUrl?: string;
@@ -24,6 +24,13 @@ export interface ProviderOnboardingData {
   availableDays?: string[];
   availableTimes?: string[];
   availableLanguages?: string[];
+  // Additional fields
+  industry?: string;
+  yearsOfExperience?: number;
+  certifications?: string[];
+  availableTimeStart?: string;
+  availableTimeEnd?: string;
+  hourlyRate?: number;
 }
 
 export const providerOnboardingApi = {

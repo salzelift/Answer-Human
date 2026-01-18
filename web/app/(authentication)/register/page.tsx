@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ import {
   Star,
 } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading, login } = useAuth();
@@ -95,7 +95,7 @@ export default function RegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await authApi.register({ name, email, username, password });
+      const response = await authApi.initiateRegister({ name, email, username, password });
       if (response.userId) {
         setUserId(response.userId);
         setShowVerification(true);
@@ -155,7 +155,7 @@ export default function RegisterPage() {
 
     setIsVerifying(true);
     try {
-      await authApi.verifyOTP({ userId, otp: otpCode });
+      await authApi.verifyRegistration({ userId, otp: otpCode });
       // Auto-login after verification
       await login({ email, password });
       const redirectTo = searchParams.get("redirect") || "/post";
@@ -176,7 +176,7 @@ export default function RegisterPage() {
     setIsResending(true);
     setVerificationError("");
     try {
-      await authApi.resendOTP(userId);
+      await authApi.resendRegistrationOTP(userId);
       setCountdown(60);
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
@@ -537,5 +537,22 @@ export default function RegisterPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-emerald-600" />
+            <p className="mt-2 text-slate-600">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

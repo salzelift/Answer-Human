@@ -27,6 +27,26 @@ export interface SeekerProfileResponse extends SeekerProfile {
   interestedCategories?: Category[];
   appointments?: Appointment[];
   notificationPreferences?: Record<string, boolean>;
+  // Preference fields
+  preferredCommunicationMedium?: string;
+  preferredPriceRange?: string;
+  preferredSessionDuration?: string;
+  preferredTimeSlots?: string[];
+  preferredLanguages?: string[];
+  budgetRange?: string;
+  urgencyLevel?: string;
+  learningStyle?: string;
+  preferredExpertRating?: string;
+  preferredResponseTime?: string;
+  preferredExpertLocation?: string;
+  timezone?: string;
+  // Demographic fields
+  age?: number;
+  gender?: string;
+  occupation?: string;
+  educationLevel?: string;
+  experienceLevel?: string;
+  devicePreferences?: string[];
   [key: string]: unknown;
 }
 
@@ -46,6 +66,27 @@ export interface UpdateProfileData {
   profilePictureUrl?: string;
   industry?: string;
   categoryIds?: string[];
+  // Preference fields
+  preferredCommunicationMedium?: string;
+  preferredPriceRange?: string;
+  preferredSessionDuration?: string;
+  preferredTimeSlots?: string[];
+  preferredLanguages?: string[];
+  budgetRange?: string;
+  urgencyLevel?: string;
+  learningStyle?: string;
+  preferredExpertRating?: number;
+  preferredResponseTime?: string;
+  preferredExpertLocation?: string;
+  timezone?: string;
+  // Demographic fields
+  age?: number;
+  gender?: string;
+  occupation?: string;
+  educationLevel?: string;
+  experienceLevel?: string;
+  devicePreferences?: string[];
+  notificationPreferences?: Record<string, boolean>;
 }
 
 export const seekerApi = {

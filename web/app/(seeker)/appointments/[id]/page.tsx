@@ -253,7 +253,7 @@ export default function AppointmentDetailPage() {
               <div className="text-right">
                 <p className="text-sm text-gray-500 mb-1">Total Amount</p>
                 <p className="text-3xl font-bold text-primary">
-                  ${(appointment.totalPayment || appointment.totalPaymemnt || 0).toString()}
+                  ${(appointment.totalPaymemnt || 0).toString()}
                 </p>
               </div>
             </div>
@@ -433,7 +433,7 @@ export default function AppointmentDetailPage() {
             <div className="flex justify-between text-lg font-bold">
               <span>Total Amount</span>
               <span className="text-primary">
-                ${(appointment.totalPayment || appointment.totalPaymemnt || 0).toString()}
+                ${(appointment.totalPaymemnt || 0).toString()}
               </span>
             </div>
           </CardContent>
