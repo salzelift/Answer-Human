@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
   CardContent,
@@ -17,22 +16,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  User,
   Mail,
   Phone,
   Camera,
   Save,
   Calendar,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  XCircle,
   Loader2,
 } from "lucide-react";
 import { seekerApi } from "@/lib/api/seeker";
 import { getCategories } from "@/lib/get-categories";
 import { flattenCategories } from "@/lib/category-utils";
 import { Category } from "@/types/category.types";
+import { Appointment } from "@/types/appointment.types";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +40,7 @@ interface SeekerProfile {
   profilePictureUrl: string | null;
   isOnboarded: boolean;
   interestedCategories: Category[];
-  appointments: any[];
+  appointments: Appointment[];
   user: {
     id: string;
     username: string;
@@ -70,11 +65,7 @@ export default function ProfilePage() {
   const [profilePictureUrl, setProfilePictureUrl] = useState("");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [profileData, categoriesData] = await Promise.all([
@@ -91,9 +82,9 @@ export default function ProfilePage() {
       setPhone(profileData.phone);
       setProfilePictureUrl(profileData.profilePictureUrl || "");
       setSelectedCategoryIds(
-        profileData.interestedCategories?.map((cat: any) => cat.id) || []
+        profileData.interestedCategories?.map((cat: Category) => cat.id) || []
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading profile:", error);
       toast({
         title: "Error",
@@ -103,7 +94,11 @@ export default function ProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSave = async () => {
     try {
@@ -123,11 +118,12 @@ export default function ProfilePage() {
 
       // Reload data
       await loadData();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       console.error("Error saving profile:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to save profile",
+        description: err.response?.data?.error || "Failed to save profile",
         variant: "destructive",
       });
     } finally {
@@ -163,17 +159,6 @@ export default function ProfilePage() {
       hour: "2-digit",
       minute: "2-digit",
     }).format(dateObj);
-  };
-
-  const getAppointmentStatusIcon = (status: string) => {
-    switch (status) {
-      case "CONFIRMED":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "CANCELLED":
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-    }
   };
 
   const getPaymentStatusColor = (status: string) => {
@@ -266,7 +251,7 @@ export default function ProfilePage() {
                         src={profilePictureUrl || undefined}
                         alt={name}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold text-2xl">
+                      <AvatarFallback className="bg-linear-to-br from-blue-500 to-purple-500 text-white font-semibold text-2xl">
                         {getInitials(name)}
                       </AvatarFallback>
                     </Avatar>
@@ -365,7 +350,7 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label>Interested Categories</Label>
                   <p className="text-sm text-gray-500 mb-3">
-                    Select the topics you're interested in
+                    Select the topics you&apos;re interested in
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {flatCategories.map((category) => (
@@ -455,7 +440,7 @@ export default function ProfilePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {profile.appointments.slice(0, 10).map((appointment: any) => (
+                        {profile.appointments.slice(0, 10).map((appointment) => (
                           <tr key={appointment.id} className="border-b hover:bg-gray-50">
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-2">
@@ -517,7 +502,7 @@ export default function ProfilePage() {
                             </td>
                             <td className="py-3 px-4">
                               <span className="font-semibold">
-                                ${(appointment.totalPayment || appointment.totalPaymemnt || 0).toString()}
+                                ${( appointment.totalPaymemnt || 0).toString()}
                               </span>
                             </td>
                             <td className="py-3 px-4">
@@ -589,6 +574,7 @@ export default function ProfilePage() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   );

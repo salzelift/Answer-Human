@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,14 @@ const EDUCATION_LEVELS = [
 ];
 const EXPERIENCE_LEVELS = ["Beginner", "Intermediate", "Advanced", "Expert"];
 const DEVICES = ["Desktop", "Mobile", "Tablet"];
+type NotificationPreferences = {
+  emailNotifications?: boolean;
+  smsNotifications?: boolean;
+  pushNotifications?: boolean;
+  appointmentReminders?: boolean;
+  expertMessages?: boolean;
+  promotionalEmails?: boolean;
+};
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -64,11 +72,7 @@ export default function SettingsPage() {
   const [expertMessages, setExpertMessages] = useState(true);
   const [promotionalEmails, setPromotionalEmails] = useState(false);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await seekerApi.getProfile();
@@ -86,7 +90,7 @@ export default function SettingsPage() {
 
       // Load notification preferences
       if (profile.notificationPreferences) {
-        const prefs = profile.notificationPreferences as any;
+        const prefs = profile.notificationPreferences as NotificationPreferences;
         setEmailNotifications(prefs.emailNotifications ?? true);
         setSmsNotifications(prefs.smsNotifications ?? false);
         setPushNotifications(prefs.pushNotifications ?? true);
@@ -94,7 +98,7 @@ export default function SettingsPage() {
         setExpertMessages(prefs.expertMessages ?? true);
         setPromotionalEmails(prefs.promotionalEmails ?? false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading profile:", error);
       toast({
         title: "Error",
@@ -104,7 +108,11 @@ export default function SettingsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleSave = async () => {
     try {
@@ -130,11 +138,12 @@ export default function SettingsPage() {
         title: "Success",
         description: "Settings saved successfully",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       console.error("Error saving settings:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to save settings",
+        description: err.response?.data?.error || "Failed to save settings",
         variant: "destructive",
       });
     } finally {
@@ -489,6 +498,7 @@ export default function SettingsPage() {
               </>
             )}
           </Button>
+        </div>
         </div>
       </div>
     </div>

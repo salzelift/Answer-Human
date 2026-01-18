@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Badge } from "@/components/ui/badge";
+// Badge removed - not currently used
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Calendar,
@@ -130,8 +130,9 @@ export default function BookExpertPage() {
       setTimeout(() => {
         router.push("/appointments");
       }, 1500);
-    } catch (error: any) {
-      console.error("Error booking appointment:", error);
+    } catch (err: unknown) {
+      console.error("Error booking appointment:", err);
+      const error = err as { response?: { data?: { error?: string } } };
       toast({
         title: "Booking Failed",
         description: error.response?.data?.error || "Failed to book appointment. Please try again.",
@@ -282,7 +283,7 @@ export default function BookExpertPage() {
                     </div>
                     <p className="font-semibold text-lg mb-2 text-slate-800">No Available Slots</p>
                     <p className="text-sm text-slate-500 max-w-sm mx-auto">
-                      This expert doesn't have any available slots at the moment. Please check back later.
+                      This expert doesn&apos;t have any available slots at the moment. Please check back later.
                     </p>
                   </div>
                 ) : (

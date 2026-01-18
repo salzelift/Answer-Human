@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -29,7 +29,6 @@ import {
   TrendingUp,
   CheckCircle,
   AlertCircle,
-  Star,
 } from "lucide-react";
 import { providerOnboardingApi } from "@/lib/api/provider-onboarding";
 import { useToast } from "@/hooks/use-toast";
@@ -55,40 +54,35 @@ export default function ExpertRequestsPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
-
-  useEffect(() => {
-    filterRequests();
-  }, [questions, searchQuery, statusFilter, categoryFilter]);
-
-  const loadRequests = async () => {
+  const loadRequests = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await providerOnboardingApi.getProfile();
       setQuestions(data.questions || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       console.error("Error loading requests:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to load requests",
+        description: err.response?.data?.error || "Failed to load requests",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const filterRequests = () => {
+  useEffect(() => {
+    loadRequests();
+  }, [loadRequests]);
+
+  const filteredQuestions = useMemo(() => {
     let filtered = [...questions];
 
-    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -99,18 +93,16 @@ export default function ExpertRequestsPage() {
       );
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       filtered = filtered.filter((q) => q.questionStatus === statusFilter);
     }
 
-    // Category filter
     if (categoryFilter !== "all") {
       filtered = filtered.filter((q) => q.questionCategory === categoryFilter);
     }
 
-    setFilteredQuestions(filtered);
-  };
+    return filtered;
+  }, [categoryFilter, questions, searchQuery, statusFilter]);
 
   const getInitials = (name: string) => {
     return name
@@ -327,7 +319,7 @@ export default function ExpertRequestsPage() {
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Seeker Info */}
-                    <div className="flex items-start gap-4 md:w-64 flex-shrink-0">
+                  <div className="flex items-start gap-4 md:w-64 shrink-0">
                       <Avatar className="h-14 w-14 border-2 border-slate-200">
                         <AvatarImage
                           src={question.knowledgeSeeker?.profilePictureUrl || undefined}

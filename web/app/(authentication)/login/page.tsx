@@ -33,9 +33,7 @@ import {
   MessageSquare,
   Shield,
   Sparkles,
-  Star,
   Users,
-  Zap,
 } from "lucide-react";
 
 type ForgotPasswordStep = "email" | "otp" | "newPassword" | "success";
@@ -397,7 +395,7 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
                     <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                      <div className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-4 h-4 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
                         <span className="text-red-600 text-xs">!</span>
                       </div>
                       {error}
@@ -509,7 +507,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl" />
-                    <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                    <div className="relative h-20 w-20 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
                       <KeyRound className="h-10 w-10 text-white" />
                     </div>
                   </div>
@@ -575,7 +573,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl" />
-                    <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                    <div className="relative h-20 w-20 rounded-full bg-linear-to-br from-blue-400 to-blue-600 flex items-center justify-center">
                       <Mail className="h-10 w-10 text-white" />
                     </div>
                   </div>
@@ -659,7 +657,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl" />
-                    <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                    <div className="relative h-20 w-20 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
                       <Lock className="h-10 w-10 text-white" />
                     </div>
                   </div>
@@ -737,7 +735,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-4">
                   <div className="relative">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse" />
-                    <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                    <div className="relative h-20 w-20 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
                       <CheckCircle2 className="h-10 w-10 text-white" />
                     </div>
                   </div>

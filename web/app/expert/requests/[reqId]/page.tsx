@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Card,
@@ -22,10 +22,7 @@ import {
   AlertCircle,
   MessageSquare,
   Send,
-  User,
   Mail,
-  Phone,
-  MapPin,
 } from "lucide-react";
 import api from "@/lib/axios";
 import { useToast } from "@/hooks/use-toast";
@@ -59,27 +56,28 @@ export default function RequestDetailPage() {
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
 
-  useEffect(() => {
-    loadQuestion();
-  }, [reqId]);
-
-  const loadQuestion = async () => {
+  const loadQuestion = useCallback(async () => {
     try {
       setIsLoading(true);
       // For now, we'll fetch from seeker endpoint - you may need to create a provider endpoint
       const response = await api.get(`/seeker/questions/${reqId}`);
       setQuestion(response.data.question);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       console.error("Error loading question:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to load request",
+        description: err.response?.data?.error || "Failed to load request",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [reqId, toast]);
+
+  useEffect(() => {
+    loadQuestion();
+  }, [loadQuestion]);
 
   const handleSubmitAnswer = async () => {
     if (!answer.trim()) {
@@ -106,11 +104,12 @@ export default function RequestDetailPage() {
       // Reload question to get updated status
       await loadQuestion();
       setAnswer("");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       console.error("Error submitting answer:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to submit answer",
+        description: err.response?.data?.error || "Failed to submit answer",
         variant: "destructive",
       });
     } finally {

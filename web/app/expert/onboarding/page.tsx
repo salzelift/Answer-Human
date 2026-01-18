@@ -70,7 +70,7 @@ const TIME_SLOTS = [
 
 export default function ExpertOnboardingPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -388,7 +388,7 @@ export default function ExpertOnboardingPage() {
                     key={index}
                     className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/10"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
                       <benefit.icon className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div>
@@ -482,7 +482,7 @@ export default function ExpertOnboardingPage() {
             <div className="max-w-2xl mx-auto">
               {error && (
                 <div className="mb-6 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-red-600 text-xs font-bold">!</span>
                   </div>
                   {error}

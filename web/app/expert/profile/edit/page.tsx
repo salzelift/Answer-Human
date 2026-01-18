@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -49,7 +49,6 @@ export default function EditExpertProfilePage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
@@ -65,13 +64,8 @@ export default function EditExpertProfilePage() {
   const [skillInput, setSkillInput] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       const profile = await providerOnboardingApi.getProfile();
@@ -88,10 +82,10 @@ export default function EditExpertProfilePage() {
       setSkills(profile.skills || []);
       setSelectedDays(profile.availableDays || []);
       setSelectedTimes(profile.availableTimes || []);
-      setSelectedLanguages(profile.availableLanguages || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number } };
       console.error("Error loading profile:", error);
-      if (error.response?.status === 404) {
+      if (err.response?.status === 404) {
         toast({
           title: "Profile not found",
           description: "Complete expert onboarding to edit your profile.",
@@ -107,7 +101,11 @@ export default function EditExpertProfilePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router, toast]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleSave = async () => {
     toast({
@@ -281,7 +279,7 @@ export default function EditExpertProfilePage() {
           <Card className="border border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle>Availability</CardTitle>
-              <CardDescription>Set when you're available for appointments</CardDescription>
+              <CardDescription>Set when you&apos;re available for appointments</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>

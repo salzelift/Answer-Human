@@ -63,7 +63,7 @@ export default function ExpertOnboardingVerifyPage() {
           <div className="text-center mb-12">
             <div className="relative inline-flex">
               <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl animate-pulse" />
-              <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-xl shadow-emerald-500/30">
+              <div className="relative w-24 h-24 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-xl shadow-emerald-500/30">
                 <Sparkles className="w-12 h-12 text-white" />
               </div>
             </div>
@@ -72,7 +72,7 @@ export default function ExpertOnboardingVerifyPage() {
               Application Submitted!
             </h1>
             <p className="mt-4 text-lg text-slate-600 max-w-md mx-auto">
-              Thank you for applying to become an expert. We're excited to have you join our community!
+              Thank you for applying to become an expert. We&apos;re excited to have you join our community!
             </p>
           </div>
 
@@ -97,7 +97,7 @@ export default function ExpertOnboardingVerifyPage() {
 
                     {/* Icon */}
                     <div
-                      className={`relative flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                      className={`relative shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
                         step.status === "completed"
                           ? "bg-emerald-600 text-white"
                           : step.status === "in-progress"
@@ -148,7 +148,7 @@ export default function ExpertOnboardingVerifyPage() {
           <Card className="border border-blue-200 bg-blue-50 rounded-2xl mb-8">
             <CardContent className="p-6">
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <div className="shrink-0 w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                   <Clock className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
@@ -156,7 +156,7 @@ export default function ExpertOnboardingVerifyPage() {
                     Estimated Review Time: 24-48 hours
                   </h3>
                   <p className="mt-1 text-sm text-blue-700">
-                    We'll send you an email notification once your application has been reviewed. 
+                    We&apos;ll send you an email notification once your application has been reviewed. 
                     Make sure to check your inbox and spam folder.
                   </p>
                 </div>

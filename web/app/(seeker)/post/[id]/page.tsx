@@ -296,7 +296,7 @@ export default function QuestionDetailPage() {
                         src={proposal.expert.profilePictureUrl || undefined}
                         alt={proposal.expert.name}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-semibold text-lg">
+                      <AvatarFallback className="bg-linear-to-br from-blue-500 to-purple-500 text-white font-semibold text-lg">
                         {getInitials(proposal.expert.name)}
                       </AvatarFallback>
                     </Avatar>

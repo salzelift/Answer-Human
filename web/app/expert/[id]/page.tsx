@@ -21,10 +21,6 @@ import {
   Briefcase,
   GraduationCap,
   Languages,
-  DollarSign,
-  Video,
-  Phone,
-  MessageSquare,
   Loader2,
   AlertCircle,
 } from "lucide-react";

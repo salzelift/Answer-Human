@@ -1,5 +1,4 @@
 import { Proposal } from "@/types/proposal.types";
-import { KnowledgeProvider } from "@/types/expert.types";
 import { CommunicationMedium } from "@/types/expert.types";
 import { getExpertById } from "./get-experts";
 import { proposalsApi } from "./api/proposals";

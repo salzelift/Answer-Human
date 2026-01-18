@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,11 +58,7 @@ export default function PreferencesPage() {
   const [preferredExpertLocation, setPreferredExpertLocation] = useState("");
   const [timezone, setTimezone] = useState("");
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await seekerApi.getProfile();
@@ -81,7 +77,7 @@ export default function PreferencesPage() {
       setPreferredResponseTime(profile.preferredResponseTime || "");
       setPreferredExpertLocation(profile.preferredExpertLocation || "");
       setTimezone(profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading profile:", error);
       toast({
         title: "Error",
@@ -91,7 +87,11 @@ export default function PreferencesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleSave = async () => {
     try {
@@ -115,11 +115,12 @@ export default function PreferencesPage() {
         title: "Success",
         description: "Preferences saved successfully",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       console.error("Error saving preferences:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.error || "Failed to save preferences",
+        description: err.response?.data?.error || "Failed to save preferences",
         variant: "destructive",
       });
     } finally {
@@ -211,7 +212,7 @@ export default function PreferencesPage() {
                 <div className="space-y-2">
                   <Label>Preferred Languages</Label>
                   <p className="text-sm text-gray-500 mb-3">
-                    Select languages you're comfortable with
+                    Select languages you&apos;re comfortable with
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {LANGUAGES.map((language) => (
@@ -486,6 +487,7 @@ export default function PreferencesPage() {
               </>
             )}
           </Button>
+        </div>
         </div>
       </div>
     </div>

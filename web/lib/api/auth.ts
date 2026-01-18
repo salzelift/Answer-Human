@@ -130,7 +130,7 @@ export const authApi = {
     return null;
   },
 
-  getUser: (): any | null => {
+  getUser: (): AuthResponse["user"] | null => {
     if (typeof window !== "undefined") {
       const user = localStorage.getItem("user");
       return user ? JSON.parse(user) : null;

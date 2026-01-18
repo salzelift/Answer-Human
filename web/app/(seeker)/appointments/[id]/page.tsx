@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -15,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
-  Clock,
   DollarSign,
   Video,
   Phone,
@@ -31,6 +29,7 @@ import {
 import { appointmentApi } from "@/lib/api/appointment";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Appointment } from "@/types/appointment.types";
 
 export default function AppointmentDetailPage() {
   const router = useRouter();
@@ -39,18 +38,15 @@ export default function AppointmentDetailPage() {
   const appointmentId = params.id as string;
 
   const [isLoading, setIsLoading] = useState(true);
-  const [appointment, setAppointment] = useState<any>(null);
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
 
-  useEffect(() => {
-    loadAppointment();
-  }, [appointmentId]);
-
-  const loadAppointment = async () => {
+  const loadAppointment = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await appointmentApi.getById(appointmentId);
-      setAppointment(data.appointment);
-    } catch (error: any) {
+      setAppointment(data.appointment as Appointment);
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } };
       console.error("Error loading appointment:", error);
       if (error.response?.status === 404) {
         toast({
@@ -69,7 +65,11 @@ export default function AppointmentDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [appointmentId, router, toast]);
+
+  useEffect(() => {
+    loadAppointment();
+  }, [loadAppointment]);
 
   const handleCancel = async () => {
     try {
@@ -79,7 +79,7 @@ export default function AppointmentDetailPage() {
         description: "Appointment cancelled successfully",
       });
       loadAppointment();
-    } catch (error: any) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to cancel appointment",

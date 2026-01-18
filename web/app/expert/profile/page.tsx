@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, MapPin, Briefcase, GraduationCap, Globe, Shield } from "lucide-react";
 import { providerOnboardingApi } from "@/lib/api/provider-onboarding";
+import { Appointment } from "@/types/appointment.types";
 
 type ProviderProfile = {
   id: string;
@@ -27,8 +28,8 @@ type ProviderProfile = {
   availableLanguages: string[];
   categories: { id: string; name: string }[];
   user: { username: string; email: string };
-  appointments: any[];
-  questions: any[];
+  appointments: Appointment[];
+  questions: { id: string; questionTitle: string }[];
   websiteUrl?: string | null;
   linkedinUrl?: string | null;
   twitterUrl?: string | null;
@@ -46,9 +47,10 @@ export default function ExpertProfilePage() {
         setIsLoading(true);
         const data = await providerOnboardingApi.getProfile();
         setProfile(data);
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const err = error as { response?: { status?: number } };
         console.error("Error loading expert profile:", error);
-        if (error.response?.status === 404) {
+        if (err.response?.status === 404) {
           router.push("/expert/onboarding");
         }
       } finally {

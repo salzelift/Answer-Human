@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,44 +14,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Calendar,
-  Clock,
-  Search,
-  Filter,
-  Loader2,
-  Eye,
-} from "lucide-react";
+import { Calendar, Clock, Search, Loader2, Eye } from "lucide-react";
 import { appointmentApi } from "@/lib/api/appointment";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Appointment } from "@/types/appointment.types";
 
 export default function AppointmentsPage() {
   const router = useRouter();
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [filteredAppointments, setFilteredAppointments] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
 
   useEffect(() => {
-    loadAppointments();
-  }, []);
-
-  useEffect(() => {
-    filterAppointments();
-  }, [appointments, searchQuery, statusFilter, paymentFilter]);
-
-  const loadAppointments = async () => {
+    const loadAppointments = async () => {
     try {
       setIsLoading(true);
       const data = await appointmentApi.getMyAppointments();
       setAppointments(data.appointments || []);
-    } catch (error: any) {
-      console.error("Error loading appointments:", error);
+      } catch (error: unknown) {
+        console.error("Error loading appointments:", error);
       toast({
         title: "Error",
         description: "Failed to load appointments",
@@ -66,33 +46,33 @@ export default function AppointmentsPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+    };
 
-  const filterAppointments = () => {
-    let filtered = [...appointments];
+    loadAppointments();
+  }, [toast]);
 
-    // Search filter
+  const filteredAppointments = appointments.filter((apt) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (apt) =>
-          apt.knowledgeProvider?.name.toLowerCase().includes(query) ||
-          apt.questions?.questionTitle.toLowerCase().includes(query)
-      );
+      const matchesExpert = apt.knowledgeProvider?.name
+        ?.toLowerCase()
+        .includes(query);
+      const matchesQuestion = apt.questions?.questionTitle
+        ?.toLowerCase()
+        .includes(query);
+      if (!matchesExpert && !matchesQuestion) return false;
     }
 
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((apt) => apt.appointmentStatus === statusFilter);
+    if (statusFilter !== "all" && apt.appointmentStatus !== statusFilter) {
+      return false;
     }
 
-    // Payment filter
-    if (paymentFilter !== "all") {
-      filtered = filtered.filter((apt) => apt.paymentStatus === paymentFilter);
+    if (paymentFilter !== "all" && apt.paymentStatus !== paymentFilter) {
+      return false;
     }
 
-    setFilteredAppointments(filtered);
-  };
+    return true;
+  });
 
   const getInitials = (name: string) => {
     return name
@@ -412,6 +392,7 @@ export default function AppointmentsPage() {
             </Card>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

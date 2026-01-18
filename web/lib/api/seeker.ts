@@ -1,5 +1,7 @@
 import api from "../axios";
 import { Question } from "@/types/question.types";
+import { Appointment } from "@/types/appointment.types";
+import { Category } from "@/types/category.types";
 
 export interface SeekerProfile {
   id: string;
@@ -13,6 +15,19 @@ export interface SeekerProfile {
   isOnboarded: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface SeekerProfileResponse extends SeekerProfile {
+  user?: {
+    id: string;
+    username: string;
+    email?: string;
+    role?: string;
+  };
+  interestedCategories?: Category[];
+  appointments?: Appointment[];
+  notificationPreferences?: Record<string, boolean>;
+  [key: string]: unknown;
 }
 
 export interface OnboardingData {
@@ -34,12 +49,12 @@ export interface UpdateProfileData {
 }
 
 export const seekerApi = {
-  getProfile: async (): Promise<any> => {
+  getProfile: async (): Promise<SeekerProfileResponse> => {
     const response = await api.get("/seeker/profile");
     return response.data.seeker;
   },
 
-  updateProfile: async (data: UpdateProfileData): Promise<any> => {
+  updateProfile: async (data: UpdateProfileData): Promise<SeekerProfileResponse> => {
     const response = await api.put("/seeker/profile", data);
     return response.data.seeker;
   },

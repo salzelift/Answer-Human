@@ -1,6 +1,5 @@
 import api from "../axios";
 import { KnowledgeProvider } from "@/types/expert.types";
-import { ExploreFilters } from "../filters";
 
 export interface GetExpertsParams {
   q?: string; // search query

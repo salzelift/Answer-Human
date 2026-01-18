@@ -21,13 +21,13 @@ export const appointmentApi = {
   },
 
   // Get user's appointments
-  getMyAppointments: async (): Promise<{ appointments: any[] }> => {
+  getMyAppointments: async (): Promise<{ appointments: Appointment[] }> => {
     const response = await api.get("/appointments/my-appointments");
     return response.data;
   },
 
   // Get appointment by ID
-  getById: async (id: string): Promise<{ appointment: any }> => {
+  getById: async (id: string): Promise<{ appointment: Appointment }> => {
     const response = await api.get(`/appointments/${id}`);
     return response.data;
   },

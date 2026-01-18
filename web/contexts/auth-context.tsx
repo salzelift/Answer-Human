@@ -16,16 +16,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthResponse["user"] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthResponse["user"] | null>(() =>
+    authApi.getUser()
+  );
+  const [isLoading, setIsLoading] = useState(() => !!authApi.getToken());
 
   useEffect(() => {
-    // Check if user is already logged in
     const token = authApi.getToken();
     const storedUser = authApi.getUser();
 
     if (token && storedUser) {
-      setUser(storedUser);
       // Optionally refresh user data from server
       authApi.getCurrentUser().then((data) => {
         setUser(data.user);
@@ -36,8 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }).finally(() => {
         setIsLoading(false);
       });
-    } else {
-      setIsLoading(false);
     }
   }, []);
 

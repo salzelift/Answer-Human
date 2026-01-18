@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -29,26 +28,31 @@ import {
   Users,
   Clock,
   Loader2,
-  TrendingUp,
   CheckCircle,
-  XCircle,
-  Settings,
   AlertTriangle,
   Shield,
   Edit,
   Save,
   MapPin,
   Briefcase,
-  GraduationCap,
-  Globe,
   MessageSquare,
   Video,
   Phone,
   Eye,
-  Star,
 } from "lucide-react";
 import { providerOnboardingApi } from "@/lib/api/provider-onboarding";
 import { useToast } from "@/hooks/use-toast";
+
+interface AppointmentItem {
+  id: string;
+  appointmentStatus: string;
+  paymentStatus: string;
+  totalPaymemnt?: number | string;
+  appointmentDate: string;
+  appointmentTime: string;
+  knowledgeSeeker?: { name: string };
+  questions?: { questionTitle: string };
+}
 
 interface ProviderProfile {
   id: string;
@@ -69,9 +73,9 @@ interface ProviderProfile {
   availableDays: string[];
   availableTimes: string[];
   availableLanguages: string[];
-  categories: any[];
-  appointments: any[];
-  questions: any[];
+  categories: { id: string; name: string }[];
+  appointments: AppointmentItem[];
+  questions: { id: string; questionTitle: string }[];
   user: {
     id: string;
     username: string;
@@ -89,20 +93,14 @@ export default function ExpertDashboardPage() {
   const [appointmentFilter, setAppointmentFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    console.log("Loading Profile")
+  const loadProfile = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await providerOnboardingApi.getProfile();
-      console.log(response)
       setProfile(response);
-    } catch (error: any) {
-      console.error("Error loading profile:", error);
-      
+    } catch (err: unknown) {
+      console.error("Error loading profile:", err);
+      const error = err as { response?: { status?: number } };
       if (error.response?.status === 404) {
         toast({
           title: "Not an Expert",
@@ -119,7 +117,11 @@ export default function ExpertDashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router, toast]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const getInitials = (name: string) => {
     return name
@@ -200,7 +202,7 @@ export default function ExpertDashboardPage() {
               <h3 className="font-semibold text-yellow-800 mb-2">What happens next?</h3>
               <ul className="text-sm text-yellow-700 space-y-1">
                 <li>• Our team will review your credentials</li>
-                <li>• You'll receive an email once verified</li>
+                <li>• You&apos;ll receive an email once verified</li>
                 <li>• You can then access all expert features</li>
               </ul>
             </div>
@@ -218,51 +220,66 @@ export default function ExpertDashboardPage() {
     );
   }
 
+  const appointments = profile.appointments ?? [];
+
   // Stats calculations
-  const totalAppointments = profile.appointments?.length || 0;
-  const pendingAppointments = profile.appointments?.filter(
-    (a: any) => a.appointmentStatus === "PENDING"
-  ).length || 0;
-  const completedAppointments = profile.appointments?.filter(
-    (a: any) => a.appointmentStatus === "CONFIRMED"
-  ).length || 0;
-  const cancelledAppointments = profile.appointments?.filter(
-    (a: any) => a.appointmentStatus === "CANCELLED"
-  ).length || 0;
-  const totalEarnings = profile.appointments
-    ?.filter((a: any) => a.paymentStatus === "PAID")
-    .reduce((sum: number, a: any) => sum + parseFloat(a.totalPaymemnt?.toString() || "0"), 0) || 0;
-  const pendingPayments = profile.appointments
-    ?.filter((a: any) => a.paymentStatus === "PENDING" && a.appointmentStatus !== "CANCELLED")
-    .reduce((sum: number, a: any) => sum + parseFloat(a.totalPaymemnt?.toString() || "0"), 0) || 0;
+  const totalAppointments = appointments.length;
+  const pendingAppointments = appointments.filter(
+    (a: AppointmentItem) => a.appointmentStatus === "PENDING"
+  ).length;
+  const completedAppointments = appointments.filter(
+    (a: AppointmentItem) => a.appointmentStatus === "CONFIRMED"
+  ).length;
+  const totalEarnings =
+    appointments
+      .filter((a: AppointmentItem) => a.paymentStatus === "PAID")
+      .reduce(
+        (sum: number, a: AppointmentItem) =>
+          sum + parseFloat(a.totalPaymemnt?.toString() || "0"),
+        0
+      ) || 0;
+  const pendingPayments =
+    appointments
+      .filter(
+        (a: AppointmentItem) =>
+          a.paymentStatus === "PENDING" && a.appointmentStatus !== "CANCELLED"
+      )
+      .reduce(
+        (sum: number, a: AppointmentItem) =>
+          sum + parseFloat(a.totalPaymemnt?.toString() || "0"),
+        0
+      ) || 0;
 
   // Filter appointments
-  const filteredAppointments = profile.appointments?.filter((apt: any) => {
-    const matchesFilter = appointmentFilter === "all" || apt.appointmentStatus === appointmentFilter.toUpperCase();
-    const matchesSearch = !searchQuery || 
+  const filteredAppointments = appointments.filter((apt: AppointmentItem) => {
+    const matchesFilter =
+      appointmentFilter === "all" ||
+      apt.appointmentStatus === appointmentFilter.toUpperCase();
+    const matchesSearch =
+      !searchQuery ||
       apt.knowledgeSeeker?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apt.questions?.questionTitle?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
-  }) || [];
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto">
           {/* Header with Profile Summary */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-              <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4">
                 <Avatar className="h-20 w-20 border-4 border-slate-200">
-                  <AvatarImage
-                    src={profile.profilePictureUrl || undefined}
-                    alt={profile.name}
-                  />
+              <AvatarImage
+                src={profile.profilePictureUrl || undefined}
+                alt={profile.name}
+              />
                   <AvatarFallback className="bg-emerald-600 text-white font-semibold text-2xl">
-                    {getInitials(profile.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
+                {getInitials(profile.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-emerald-600">
                     Expert Dashboard
                   </p>
@@ -293,11 +310,11 @@ export default function ExpertDashboardPage() {
                     </p>
                   )}
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {profile.categories?.slice(0, 3).map((cat: any) => (
-                      <Badge key={cat.id} variant="secondary">
-                        {cat.name}
-                      </Badge>
-                    ))}
+                {profile.categories?.slice(0, 3).map((cat) => (
+                  <Badge key={cat.id} variant="secondary">
+                    {cat.name}
+                  </Badge>
+                ))}
                     {profile.categories?.length > 3 && (
                       <Badge variant="outline">+{profile.categories.length - 3}</Badge>
                     )}
@@ -320,55 +337,55 @@ export default function ExpertDashboardPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card className="border border-slate-200 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
                     <p className="text-sm text-slate-500">Total Appointments</p>
                     <p className="text-2xl font-semibold mt-1 text-slate-900">{totalAppointments}</p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-emerald-600" />
                 </div>
-              </CardContent>
-            </Card>
+                  <Calendar className="h-8 w-8 text-emerald-600" />
+              </div>
+            </CardContent>
+          </Card>
 
             <Card className="border border-slate-200 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
                     <p className="text-sm text-slate-500">Pending</p>
                     <p className="text-2xl font-semibold mt-1 text-slate-900">{pendingAppointments}</p>
-                  </div>
-                  <Clock className="h-8 w-8 text-emerald-600" />
                 </div>
-              </CardContent>
-            </Card>
+                  <Clock className="h-8 w-8 text-emerald-600" />
+              </div>
+            </CardContent>
+          </Card>
 
             <Card className="border border-slate-200 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
                     <p className="text-sm text-slate-500">Completed</p>
                     <p className="text-2xl font-semibold mt-1 text-slate-900">{completedAppointments}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-emerald-600" />
                 </div>
-              </CardContent>
-            </Card>
+                  <CheckCircle className="h-8 w-8 text-emerald-600" />
+              </div>
+            </CardContent>
+          </Card>
 
             <Card className="border border-slate-200 shadow-sm">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
                     <p className="text-sm text-slate-500">Total Earnings</p>
                     <p className="text-2xl font-semibold mt-1 text-slate-900">
                       ${totalEarnings.toFixed(2)}
                     </p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-emerald-600" />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+                  <DollarSign className="h-8 w-8 text-emerald-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
           {/* Tabs Content */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -396,7 +413,7 @@ export default function ExpertDashboardPage() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        {profile.appointments?.slice(0, 5).map((apt: any) => (
+                        {appointments.slice(0, 5).map((apt) => (
                           <div
                             key={apt.id}
                             className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
@@ -541,7 +558,7 @@ export default function ExpertDashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                      {filteredAppointments.map((apt: any) => (
+                      {filteredAppointments.map((apt) => (
                   <div
                           key={apt.id}
                     className="border rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -651,7 +668,7 @@ export default function ExpertDashboardPage() {
                       <div>
                         <p className="text-sm text-gray-500">Paid Sessions</p>
                         <p className="text-3xl font-bold">
-                          {profile.appointments?.filter((a: any) => a.paymentStatus === "PAID").length || 0}
+                          {appointments.filter((a) => a.paymentStatus === "PAID").length}
                         </p>
                       </div>
                       <CheckCircle className="h-10 w-10 text-green-500" />
@@ -678,7 +695,7 @@ export default function ExpertDashboardPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {profile.appointments?.slice(0, 10).map((apt: any) => (
+                        {appointments.slice(0, 10).map((apt) => (
                           <tr key={apt.id} className="border-b hover:bg-slate-50">
                             <td className="py-3 px-4">{formatDate(apt.appointmentDate)}</td>
                             <td className="py-3 px-4">{apt.knowledgeSeeker?.name || "Unknown"}</td>
@@ -715,7 +732,7 @@ export default function ExpertDashboardPage() {
               <Card className="border border-slate-200 shadow-sm">
                 <CardHeader>
                   <CardTitle>Manage Availability</CardTitle>
-                  <CardDescription>Set when you're available for appointments</CardDescription>
+                  <CardDescription>Set when you&apos;re available for appointments</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Availability Status */}
