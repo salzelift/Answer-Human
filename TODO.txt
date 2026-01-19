@@ -23,3 +23,5 @@ BUGS:
     3: if the url of the booking page of the expert has query parameter of questionID then the booking will happen against that question (simpley the the expert will have a prior acknkowledgment of about the question regarding which the booking has happend) and for the teh corresponding expert/request/:id  has to be updated
 
     4: also the seeker information in the expert/request/:id is showing as Anonymous Knowledge Seeker along with a question mark in the profile image section 
+
+    5: The Whole Site needs to be in light mode, there are some text
