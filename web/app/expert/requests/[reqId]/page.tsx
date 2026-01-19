@@ -13,6 +13,15 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Calendar,
   Clock,
@@ -23,10 +32,15 @@ import {
   MessageSquare,
   Send,
   Mail,
+  DollarSign,
+  Video,
+  Phone,
+  Sparkles,
 } from "lucide-react";
 import api from "@/lib/axios";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
 
 interface Question {
   id: string;
@@ -45,21 +59,36 @@ interface Question {
   };
 }
 
+const DURATION_OPTIONS = [
+  { value: "30 minutes", label: "30 minutes" },
+  { value: "1 hour", label: "1 hour" },
+  { value: "1.5 hours", label: "1.5 hours" },
+  { value: "2 hours", label: "2 hours" },
+  { value: "3+ hours", label: "3+ hours" },
+];
+
 export default function RequestDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuth();
   const reqId = params.reqId as string;
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
-  const [answer, setAnswer] = useState("");
+  const [hasPitched, setHasPitched] = useState(false);
+  
+  // Pitch form state
+  const [pitchMessage, setPitchMessage] = useState("");
+  const [proposedPrice, setProposedPrice] = useState("");
+  const [communicationMedium, setCommunicationMedium] = useState("VIDEO_CALL");
+  const [estimatedDuration, setEstimatedDuration] = useState("");
 
   const loadQuestion = useCallback(async () => {
     try {
       setIsLoading(true);
-      // For now, we'll fetch from seeker endpoint - you may need to create a provider endpoint
+      // Fetch from seeker endpoint
       const response = await api.get(`/seeker/questions/${reqId}`);
       setQuestion(response.data.question);
     } catch (error: unknown) {
@@ -79,11 +108,29 @@ export default function RequestDetailPage() {
     loadQuestion();
   }, [loadQuestion]);
 
-  const handleSubmitAnswer = async () => {
-    if (!answer.trim()) {
+  const handleSubmitPitch = async () => {
+    if (!pitchMessage.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please provide an answer",
+        description: "Please provide a pitch message",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!proposedPrice || parseFloat(proposedPrice) <= 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide a valid price",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!estimatedDuration) {
+      toast({
+        title: "Validation Error",
+        description: "Please select an estimated duration",
         variant: "destructive",
       });
       return;
@@ -91,25 +138,31 @@ export default function RequestDetailPage() {
 
     try {
       setIsSubmitting(true);
-      // Update question status to ANSWERED
-      await api.put(`/seeker/questions/${reqId}`, {
-        questionStatus: "ANSWERED",
+      
+      await api.post("/proposals", {
+        questionId: reqId,
+        expertId: user?.id,
+        message: pitchMessage,
+        price: parseFloat(proposedPrice),
+        communicationMedium,
+        estimatedDuration,
       });
 
       toast({
-        title: "Success!",
-        description: "Your answer has been submitted successfully",
+        title: "Pitch Submitted!",
+        description: "Your proposal has been sent to the seeker successfully.",
       });
 
-      // Reload question to get updated status
-      await loadQuestion();
-      setAnswer("");
+      setHasPitched(true);
+      setPitchMessage("");
+      setProposedPrice("");
+      setEstimatedDuration("");
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error?: string } } };
-      console.error("Error submitting answer:", error);
+      console.error("Error submitting pitch:", error);
       toast({
         title: "Error",
-        description: err.response?.data?.error || "Failed to submit answer",
+        description: err.response?.data?.error || "Failed to submit pitch",
         variant: "destructive",
       });
     } finally {
@@ -275,50 +328,171 @@ export default function RequestDetailPage() {
                   </div>
                 </div>
 
-                {/* Answer Section */}
-                {question.questionStatus === "PENDING" && (
-                  <div className="pt-6 border-t">
-                    <Label className="text-base font-semibold text-slate-800 mb-3 block">
-                      Provide Your Answer
-                    </Label>
-                    <Textarea
-                      placeholder="Write your detailed answer here..."
-                      value={answer}
-                      onChange={(e) => setAnswer(e.target.value)}
-                      rows={8}
-                      className="rounded-xl resize-none mb-4"
-                    />
+                {/* Pitch Section */}
+                {question.questionStatus === "PENDING" && !hasPitched && (
+                  <div className="pt-6 border-t space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                        <Sparkles className="h-5 w-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Submit Your Pitch</h3>
+                        <p className="text-sm text-slate-500">
+                          Introduce yourself and explain how you can help
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Pitch Message */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-slate-700">
+                        Your Pitch <span className="text-red-500">*</span>
+                      </Label>
+                      <Textarea
+                        placeholder="Introduce yourself and explain how you can help with this question. Share your relevant experience and why you're the right expert for this..."
+                        value={pitchMessage}
+                        onChange={(e) => setPitchMessage(e.target.value)}
+                        rows={6}
+                        className="rounded-xl resize-none"
+                      />
+                    </div>
+
+                    {/* Price and Duration Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-slate-700">
+                          Proposed Price <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative">
+                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input
+                            type="number"
+                            placeholder="e.g., 50"
+                            value={proposedPrice}
+                            onChange={(e) => setProposedPrice(e.target.value)}
+                            className="pl-9 rounded-xl"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm font-semibold text-slate-700">
+                          Estimated Duration <span className="text-red-500">*</span>
+                        </Label>
+                        <Select value={estimatedDuration} onValueChange={setEstimatedDuration}>
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DURATION_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Communication Medium */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold text-slate-700">
+                        Preferred Communication
+                      </Label>
+                      <RadioGroup
+                        value={communicationMedium}
+                        onValueChange={setCommunicationMedium}
+                        className="grid grid-cols-3 gap-3"
+                      >
+                        <div
+                          className={cn(
+                            "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                            communicationMedium === "VIDEO_CALL"
+                              ? "border-emerald-500 bg-emerald-50"
+                              : "border-slate-200 hover:border-slate-300"
+                          )}
+                          onClick={() => setCommunicationMedium("VIDEO_CALL")}
+                        >
+                          <RadioGroupItem value="VIDEO_CALL" id="video" className="sr-only" />
+                          <Video className={cn(
+                            "h-5 w-5",
+                            communicationMedium === "VIDEO_CALL" ? "text-emerald-600" : "text-slate-400"
+                          )} />
+                          <Label htmlFor="video" className="text-sm font-medium cursor-pointer">
+                            Video
+                          </Label>
+                        </div>
+                        <div
+                          className={cn(
+                            "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                            communicationMedium === "AUDIO_CALL"
+                              ? "border-emerald-500 bg-emerald-50"
+                              : "border-slate-200 hover:border-slate-300"
+                          )}
+                          onClick={() => setCommunicationMedium("AUDIO_CALL")}
+                        >
+                          <RadioGroupItem value="AUDIO_CALL" id="audio" className="sr-only" />
+                          <Phone className={cn(
+                            "h-5 w-5",
+                            communicationMedium === "AUDIO_CALL" ? "text-emerald-600" : "text-slate-400"
+                          )} />
+                          <Label htmlFor="audio" className="text-sm font-medium cursor-pointer">
+                            Audio
+                          </Label>
+                        </div>
+                        <div
+                          className={cn(
+                            "flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all",
+                            communicationMedium === "MESSAGE"
+                              ? "border-emerald-500 bg-emerald-50"
+                              : "border-slate-200 hover:border-slate-300"
+                          )}
+                          onClick={() => setCommunicationMedium("MESSAGE")}
+                        >
+                          <RadioGroupItem value="MESSAGE" id="message" className="sr-only" />
+                          <MessageSquare className={cn(
+                            "h-5 w-5",
+                            communicationMedium === "MESSAGE" ? "text-emerald-600" : "text-slate-400"
+                          )} />
+                          <Label htmlFor="message" className="text-sm font-medium cursor-pointer">
+                            Chat
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {/* Submit Button */}
                     <Button
-                      onClick={handleSubmitAnswer}
-                      disabled={isSubmitting || !answer.trim()}
-                      className="w-full h-12 text-base font-semibold"
+                      onClick={handleSubmitPitch}
+                      disabled={isSubmitting || !pitchMessage.trim() || !proposedPrice || !estimatedDuration}
+                      className="w-full h-12 text-base font-semibold bg-emerald-600 hover:bg-emerald-700"
                     >
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Submitting...
+                          Submitting Pitch...
                         </>
                       ) : (
                         <>
                           <Send className="mr-2 h-5 w-5" />
-                          Submit Answer
+                          Submit Pitch
                         </>
                       )}
                     </Button>
                   </div>
                 )}
 
-                {question.questionStatus === "ANSWERED" && (
+                {/* Pitch Submitted Success */}
+                {(hasPitched || question.questionStatus === "ANSWERED") && (
                   <div className="pt-6 border-t">
                     <div className="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
                       <div className="flex items-center gap-3 mb-2">
                         <CheckCircle className="h-6 w-6 text-green-600" />
                         <h3 className="text-lg font-bold text-green-800">
-                          Question Answered
+                          Pitch Submitted Successfully
                         </h3>
                       </div>
                       <p className="text-green-700">
-                        You have successfully answered this question.
+                        Your proposal has been sent to the seeker. They will review it and contact you if they&apos;re interested.
                       </p>
                     </div>
                   </div>

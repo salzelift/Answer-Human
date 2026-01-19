@@ -22,6 +22,11 @@ import {
   Save,
   Calendar,
   Loader2,
+  CreditCard,
+  IndianRupee,
+  CheckCircle,
+  Clock,
+  AlertCircle,
 } from "lucide-react";
 import { seekerApi } from "@/lib/api/seeker";
 import { getCategories } from "@/lib/get-categories";
@@ -233,8 +238,9 @@ export default function ProfilePage() {
           </Card>
 
           <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-white border border-slate-200">
+          <TabsList className="grid w-full grid-cols-4 bg-white border border-slate-200">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="payments">Payments</TabsTrigger>
             <TabsTrigger value="preferences">Preferences</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
@@ -518,6 +524,123 @@ export default function ProfilePage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Payments Tab */}
+          <TabsContent value="payments">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <CreditCard className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <CardTitle>Payment History</CardTitle>
+                    <CardDescription>
+                      View all your payments for consultations and sessions
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {!profile.appointments || profile.appointments.filter(a => a.paymentStatus === "PAID").length === 0 ? (
+                  <div className="text-center py-12">
+                    <IndianRupee className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-500 font-medium">No payment history</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Your completed payments will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Payment Summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                        <p className="text-sm text-green-600 font-medium">Total Paid</p>
+                        <p className="text-2xl font-bold text-green-700">
+                          ₹{profile.appointments
+                            .filter(a => a.paymentStatus === "PAID")
+                            .reduce((sum, a) => sum + Number(a.totalPaymemnt || 0), 0)}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                        <p className="text-sm text-blue-600 font-medium">Completed Sessions</p>
+                        <p className="text-2xl font-bold text-blue-700">
+                          {profile.appointments.filter(a => a.paymentStatus === "PAID").length}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                        <p className="text-sm text-yellow-600 font-medium">Pending Payments</p>
+                        <p className="text-2xl font-bold text-yellow-700">
+                          {profile.appointments.filter(a => a.paymentStatus === "PENDING").length}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Payment List */}
+                    <div className="space-y-3">
+                      {profile.appointments
+                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                        .map((appointment) => (
+                          <div
+                            key={appointment.id}
+                            className={cn(
+                              "flex items-center justify-between p-4 rounded-xl border",
+                              appointment.paymentStatus === "PAID"
+                                ? "bg-green-50 border-green-200"
+                                : appointment.paymentStatus === "FAILED"
+                                ? "bg-red-50 border-red-200"
+                                : "bg-yellow-50 border-yellow-200"
+                            )}
+                          >
+                            <div className="flex items-center gap-4">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage
+                                  src={appointment.knowledgeProvider?.profilePictureUrl || undefined}
+                                />
+                                <AvatarFallback>
+                                  {getInitials(appointment.knowledgeProvider?.name || "EX")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-semibold text-slate-800">
+                                  Session with {appointment.knowledgeProvider?.name || "Expert"}
+                                </p>
+                                <p className="text-sm text-slate-500">
+                                  {appointment.questions?.questionTitle || "Consultation"} • {formatDate(appointment.appointmentDate)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className={cn(
+                                "font-bold text-lg",
+                                appointment.paymentStatus === "PAID" ? "text-green-600" : "text-slate-600"
+                              )}>
+                                ₹{Number(appointment.totalPaymemnt || 0)}
+                              </p>
+                              <Badge
+                                className={cn(
+                                  "text-xs",
+                                  appointment.paymentStatus === "PAID"
+                                    ? "bg-green-100 text-green-700"
+                                    : appointment.paymentStatus === "FAILED"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-yellow-100 text-yellow-700"
+                                )}
+                              >
+                                {appointment.paymentStatus === "PAID" && <CheckCircle className="h-3 w-3 mr-1" />}
+                                {appointment.paymentStatus === "PENDING" && <Clock className="h-3 w-3 mr-1" />}
+                                {appointment.paymentStatus === "FAILED" && <AlertCircle className="h-3 w-3 mr-1" />}
+                                {appointment.paymentStatus}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
                   </div>
                 )}
               </CardContent>

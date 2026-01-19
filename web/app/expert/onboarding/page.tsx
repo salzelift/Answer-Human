@@ -17,8 +17,11 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
 import { providerOnboardingApi } from "@/lib/api/provider-onboarding";
+import { linkedinApi } from "@/lib/api/linkedin";
+import { aiApi } from "@/lib/api/ai";
 import { getCategories } from "@/lib/get-categories";
 import { Category } from "@/types/category.types";
+import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   ArrowRight,
@@ -38,6 +41,8 @@ import {
   User,
   Users,
   Zap,
+  Linkedin,
+  Wand2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -70,13 +75,17 @@ const TIME_SLOTS = [
 
 export default function ExpertOnboardingPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
 
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isConnectingLinkedIn, setIsConnectingLinkedIn] = useState(false);
+  const [isEnhancingProfile, setIsEnhancingProfile] = useState(false);
+  const [linkedinConnected, setLinkedinConnected] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -201,6 +210,118 @@ export default function ExpertOnboardingPage() {
         : [...prev.availableDays, day],
     }));
   };
+
+  // Handle LinkedIn OAuth
+  const handleConnectLinkedIn = async () => {
+    try {
+      setIsConnectingLinkedIn(true);
+      const { authUrl } = await linkedinApi.getAuthUrl();
+      window.location.href = authUrl;
+    } catch (err) {
+      console.error("LinkedIn connect error:", err);
+      toast({
+        title: "Error",
+        description: "Failed to connect to LinkedIn. Please try again.",
+        variant: "destructive",
+      });
+      setIsConnectingLinkedIn(false);
+    }
+  };
+
+  // Handle AI profile enhancement
+  const handleEnhanceWithAI = async () => {
+    if (!formData.jobTitle && !formData.skills.length) {
+      toast({
+        title: "Missing Information",
+        description: "Please add at least your job title or skills before enhancing with AI.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsEnhancingProfile(true);
+      const response = await aiApi.expandProfile({
+        name: user?.username || "Expert",
+        headline: formData.jobTitle,
+        skills: formData.skills,
+        experience: formData.yearsOfExperience,
+      });
+
+      const { expandedProfile } = response;
+
+      // Update form with AI-generated content
+      if (expandedProfile.bio && !formData.bio) {
+        setFormData((prev) => ({ ...prev, bio: expandedProfile.bio }));
+      }
+      
+      if (expandedProfile.skillTags?.length) {
+        const newSkills = expandedProfile.skillTags.filter(
+          (s: string) => !formData.skills.includes(s)
+        );
+        if (newSkills.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            skills: [...prev.skills, ...newSkills.slice(0, 5)],
+          }));
+        }
+      }
+
+      toast({
+        title: "Profile Enhanced!",
+        description: "AI has generated suggestions for your profile. Review and edit as needed.",
+      });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      console.error("AI enhancement error:", err);
+      toast({
+        title: "Enhancement Failed",
+        description: error.response?.data?.error || "Failed to enhance profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancingProfile(false);
+    }
+  };
+
+  // Check for LinkedIn callback data in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const linkedinData = urlParams.get("linkedin_data");
+    const linkedinError = urlParams.get("linkedin_error");
+
+    if (linkedinError) {
+      toast({
+        title: "LinkedIn Connection Failed",
+        description: "Could not connect to LinkedIn. Please try again.",
+        variant: "destructive",
+      });
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    if (linkedinData) {
+      try {
+        const data = JSON.parse(decodeURIComponent(linkedinData));
+        setLinkedinConnected(true);
+        // Auto-fill form data from LinkedIn
+        if (data.name && !formData.jobTitle) {
+          // Name could be used for display but job title comes from profile
+        }
+        if (data.picture) {
+          // Could be used for profile picture
+        }
+        toast({
+          title: "LinkedIn Connected!",
+          description: "Your LinkedIn profile has been linked successfully.",
+        });
+        // Clean URL
+        window.history.replaceState({}, "", window.location.pathname);
+      } catch (e) {
+        console.error("Failed to parse LinkedIn data:", e);
+      }
+    }
+  }, [toast, formData.jobTitle]);
 
   const validateStep = (step: OnboardingStep): boolean => {
     setError("");
@@ -504,6 +625,46 @@ export default function ExpertOnboardingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+                {/* Quick Actions - LinkedIn & AI */}
+                <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl border border-slate-200">
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-slate-800 mb-1">Quick Setup</p>
+                    <p className="text-xs text-slate-500">Connect LinkedIn or use AI to enhance your profile</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={linkedinConnected ? "default" : "outline"}
+                      size="sm"
+                      onClick={handleConnectLinkedIn}
+                      disabled={isConnectingLinkedIn || linkedinConnected}
+                      className="gap-2"
+                    >
+                      {isConnectingLinkedIn ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Linkedin className="h-4 w-4" />
+                      )}
+                      {linkedinConnected ? "Connected" : "Connect LinkedIn"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEnhanceWithAI}
+                      disabled={isEnhancingProfile}
+                      className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                    >
+                      {isEnhancingProfile ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-4 w-4" />
+                      )}
+                      Enhance with AI
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                       <Label className="text-slate-700">
                         Professional Title <span className="text-red-500">*</span>

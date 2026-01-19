@@ -26,6 +26,16 @@ router.get(
       const questions = await prisma.questions.findMany({
         orderBy: { createdAt: "desc" },
         take: 100,
+        include: {
+          knowledgeSeeker: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              profilePictureUrl: true,
+            },
+          },
+        },
       });
 
       const filtered = questions.filter((question) => {

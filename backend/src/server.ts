@@ -11,6 +11,10 @@ import appointmentRoutes from "./appointment";
 import providerOnboardingRoutes from "./providerOnboarding";
 import feedRoutes from "./feed";
 import proposalRoutes from "./proposals";
+import razorpayRoutes from "./razorpay";
+import walletRoutes from "./wallet";
+import linkedinRoutes from "./linkedin";
+import aiRoutes from "./ai";
 import { initSocket } from "./realtime";
 
 dotenv.config();
@@ -37,6 +41,10 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/provider-onboarding", providerOnboardingRoutes);
 app.use("/api/feed", feedRoutes);
 app.use("/api/proposals", proposalRoutes);
+app.use("/api/payments", razorpayRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/linkedin", linkedinRoutes);
+app.use("/api/ai", aiRoutes);
 
 const PORT = process.env.PORT || 8000;
 initSocket(server);

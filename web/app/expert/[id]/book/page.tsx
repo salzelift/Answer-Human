@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-// Badge removed - not currently used
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Calendar,
@@ -19,12 +19,23 @@ import {
   Phone,
   MessageSquare,
   AlertCircle,
+  FileQuestion,
 } from "lucide-react";
 import { providerApi } from "@/lib/api/provider";
 import { appointmentApi } from "@/lib/api/appointment";
+import { paymentApi } from "@/lib/api/payment";
+import { getQuestionById } from "@/lib/get-questions";
 import { useToast } from "@/hooks/use-toast";
 import { KnowledgeProvider } from "@/types/expert.types";
 import { AvailableSlot, CommunicationMedium, PaymentMethod } from "@/types/appointment.types";
+import { Question } from "@/types/question.types";
+import Script from "next/script";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface GroupedSlots {
   date: string;
@@ -34,10 +45,13 @@ interface GroupedSlots {
 export default function BookExpertPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const expertId = params.id as string;
+  const questionId = searchParams.get("questionId");
 
   const [expert, setExpert] = useState<KnowledgeProvider | null>(null);
+  const [question, setQuestion] = useState<Question | null>(null);
   const [availableSlots, setAvailableSlots] = useState<GroupedSlots[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,11 +67,24 @@ export default function BookExpertPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
+        
+        // Fetch expert and slots
         const [expertData, slotsData] = await Promise.all([
           providerApi.getById(expertId),
           appointmentApi.getAvailableSlots(expertId),
         ]);
         setExpert(expertData);
+        
+        // Fetch question if questionId is present
+        if (questionId) {
+          try {
+            const questionData = await getQuestionById(questionId);
+            setQuestion(questionData);
+          } catch (err) {
+            console.error("Error fetching question:", err);
+            // Don't fail the whole page if question fetch fails
+          }
+        }
         
         // Group slots by date
         const grouped = slotsData.reduce((acc: GroupedSlots[], slot: AvailableSlot) => {
@@ -84,7 +111,7 @@ export default function BookExpertPage() {
     };
 
     fetchData();
-  }, [expertId, toast]);
+  }, [expertId, questionId, toast]);
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
@@ -113,23 +140,82 @@ export default function BookExpertPage() {
       // Extract the start time from the time range (e.g., "09:00-10:00" -> "09:00")
       const timeStart = selectedTime.split("-")[0];
 
-      await appointmentApi.create({
+      // Step 1: Create appointment (pending payment)
+      const appointmentData = await appointmentApi.create({
         expertId: expertId,
-        appointmentDate: selectedDate, // ISO date string (YYYY-MM-DD)
-        appointmentTime: timeStart, // Time string (HH:MM)
+        appointmentDate: selectedDate,
+        appointmentTime: timeStart,
         communicationMedium: communicationMedium as CommunicationMedium,
         paymentMethod: PaymentMethod.RAZORPAY,
+        questionId: questionId || undefined,
       });
 
-      toast({
-        title: "Success!",
-        description: "Your appointment has been booked successfully",
-      });
+      const appointmentId = appointmentData.id;
+      const amount = 500; // Default session price - this should come from proposal/expert pricing
 
-      // Redirect to appointments page
-      setTimeout(() => {
-        router.push("/appointments");
-      }, 1500);
+      // Step 2: Create payment order
+      const orderData = await paymentApi.createOrder(amount, appointmentId);
+
+      // Step 3: Open Razorpay checkout
+      const options = {
+        key: orderData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Answer Human",
+        description: `Session with ${expert?.name}`,
+        order_id: orderData.orderId,
+        handler: async function (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) {
+          try {
+            // Step 4: Verify payment
+            await paymentApi.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              appointmentId,
+            });
+
+            toast({
+              title: "Payment Successful!",
+              description: "Your appointment has been confirmed",
+            });
+
+            // Redirect to appointments page
+            setTimeout(() => {
+              router.push("/appointments");
+            }, 1500);
+          } catch (err) {
+            console.error("Payment verification failed:", err);
+            toast({
+              title: "Payment Verification Failed",
+              description: "Please contact support if amount was deducted",
+              variant: "destructive",
+            });
+          }
+        },
+        prefill: {
+          name: "", // Can be filled from user context
+          email: "",
+        },
+        theme: {
+          color: "#059669", // emerald-600
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+            toast({
+              title: "Payment Cancelled",
+              description: "You can complete the payment later from your appointments",
+            });
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err: unknown) {
       console.error("Error booking appointment:", err);
       const error = err as { response?: { data?: { error?: string } } };
@@ -138,7 +224,6 @@ export default function BookExpertPage() {
         description: error.response?.data?.error || "Failed to book appointment. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -183,8 +268,10 @@ export default function BookExpertPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      <div className="min-h-screen bg-slate-50 py-10">
+        <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <Button
@@ -596,6 +683,34 @@ export default function BookExpertPage() {
                 </p>
               </div>
               <CardContent className="pt-6 space-y-5">
+                {/* Question Context */}
+                {question && (
+                  <div className="pb-5 border-b border-slate-200">
+                    <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+                          <FileQuestion className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-blue-700 font-semibold mb-1">Booking for Question</p>
+                          <p className="font-semibold text-slate-800 text-sm line-clamp-2">
+                            {question.questionTitle}
+                          </p>
+                          {question.questionTags && question.questionTags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {question.questionTags.slice(0, 2).map((tag, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs bg-white">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Expert Info */}
                 <div className="flex items-center gap-4 pb-5 border-b border-slate-200">
                   <div className="relative">
@@ -741,6 +856,7 @@ export default function BookExpertPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

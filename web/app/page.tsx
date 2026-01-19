@@ -466,7 +466,7 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-24 bg-white">
+      <section id="how-it-works" className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 mb-4">
@@ -695,7 +695,7 @@ export default function HomePage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-24 bg-slate-900 text-white relative overflow-hidden">
+      <section id="testimonials" className="py-24 bg-slate-900 text-white relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
@@ -829,12 +829,12 @@ export default function HomePage() {
                 The human-powered knowledge marketplace connecting seekers with verified experts.
               </p>
               <div className="flex gap-4 mt-6">
-                <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                <a href="https://twitter.com/answerhuman" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z" />
                   </svg>
                 </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                <a href="https://linkedin.com/company/answerhuman" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                   </svg>
@@ -856,12 +856,15 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <button 
+                    onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+                    className="hover:text-white transition text-left"
+                  >
                     How it Works
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <Link href="/explore" className="hover:text-white transition">
                     Pricing
                   </Link>
                 </li>
@@ -877,17 +880,20 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <Link href="/expert/onboarding" className="hover:text-white transition">
                     Expert Guidelines
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <button 
+                    onClick={() => document.getElementById("testimonials")?.scrollIntoView({ behavior: "smooth" })}
+                    className="hover:text-white transition text-left"
+                  >
                     Success Stories
-                  </Link>
+                  </button>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <Link href="/explore" className="hover:text-white transition">
                     Resources
                   </Link>
                 </li>
@@ -898,24 +904,24 @@ export default function HomePage() {
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-3 text-slate-400">
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <Link href="/" className="hover:text-white transition">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <Link href="/explore" className="hover:text-white transition">
                     Blog
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <Link href="/expert/onboarding" className="hover:text-white transition">
                     Careers
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="hover:text-white transition">
+                  <a href="mailto:support@answerhuman.com" className="hover:text-white transition">
                     Contact
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -926,13 +932,13 @@ export default function HomePage() {
               © 2026 Answer Human. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm text-slate-400">
-              <Link href="#" className="hover:text-white transition">
+              <Link href="/privacy" className="hover:text-white transition">
                 Privacy Policy
               </Link>
-              <Link href="#" className="hover:text-white transition">
+              <Link href="/terms" className="hover:text-white transition">
                 Terms of Service
               </Link>
-              <Link href="#" className="hover:text-white transition">
+              <Link href="/privacy" className="hover:text-white transition">
                 Cookie Policy
               </Link>
             </div>

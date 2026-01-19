@@ -99,6 +99,7 @@ model Questions {
   questionTags String[]
   questionStatus QuestionStatus @default(PENDING)
   appointments Appointment[]
+  proposals Proposal[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -143,7 +144,10 @@ model KnowledgeProvider {
   // provider booking details
   appointments Appointment[]
   questions Questions[]
-
+  proposals Proposal[]
+  
+  // wallet relation
+  wallet ExpertWallet?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -240,4 +244,83 @@ model Category {
   knowledgeSeekers KnowledgeSeeker[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Proposal Model
+
+model Proposal {
+  id                  String   @id @default(uuid())
+  questionId          String
+  question            Questions @relation(fields: [questionId], references: [id])
+  expertId            String
+  expert              KnowledgeProvider @relation(fields: [expertId], references: [id])
+  message             String
+  price               Decimal
+  communicationMedium String
+  estimatedDuration   String
+  status              ProposalStatus @default(PENDING)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([questionId])
+  @@index([expertId])
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// Payment & Wallet Models
+
+enum TransactionType {
+  CREDIT
+  PAYOUT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model ExpertWallet {
+  id           String   @id @default(uuid())
+  expertId     String   @unique
+  expert       KnowledgeProvider @relation(fields: [expertId], references: [id])
+  balance      Decimal  @default(0)
+  currency     String   @default("INR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  transactions WalletTransaction[]
+  bankDetails  ExpertBankDetails?
+}
+
+model ExpertBankDetails {
+  id                String   @id @default(uuid())
+  walletId          String   @unique
+  wallet            ExpertWallet @relation(fields: [walletId], references: [id])
+  accountHolderName String
+  accountNumber     String
+  ifscCode          String
+  bankName          String
+  currency          String   @default("INR")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WalletTransaction {
+  id                String   @id @default(uuid())
+  walletId          String
+  wallet            ExpertWallet @relation(fields: [walletId], references: [id])
+  type              TransactionType
+  amount            Decimal
+  currency          String
+  status            TransactionStatus
+  razorpayPaymentId String?
+  razorpayPayoutId  String?
+  appointmentId     String?
+  description       String?
+  createdAt         DateTime @default(now())
 }

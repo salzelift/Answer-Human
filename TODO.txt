@@ -24,4 +24,4 @@ BUGS:
 
     4: also the seeker information in the expert/request/:id is showing as Anonymous Knowledge Seeker along with a question mark in the profile image section 
 
-    5: The Whole Site needs to be in light mode, there are some text
+    5: In the home page make sure whatever CTA's there are, should be real and no fake buttons

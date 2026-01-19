@@ -22,8 +22,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Calendar, Tag, FolderOpen, Clock } from "lucide-react";
+import { Plus, Search, Calendar, Tag, FolderOpen, Clock, Wand2, Loader2, RefreshCw, Check, X } from "lucide-react";
 import { Question, QuestionStatus } from "@/types/question.types";
+import { aiApi, EnhancedQuestion } from "@/lib/api/ai";
+import { useToast } from "@/hooks/use-toast";
 import { getQuestions, createQuestion } from "@/lib/get-questions";
 import { getCategories } from "@/lib/get-categories";
 import { flattenCategories } from "@/lib/category-utils";
@@ -33,6 +35,7 @@ import { getSocket } from "@/lib/socket";
 
 export default function PostPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -45,6 +48,11 @@ export default function PostPage() {
   const [questionCategory, setQuestionCategory] = useState("");
   const [questionTags, setQuestionTags] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // AI Enhancement state
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhancedVersion, setEnhancedVersion] = useState<EnhancedQuestion | null>(null);
+  const [showEnhanced, setShowEnhanced] = useState(false);
   
   // Filter and sort state
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,6 +177,70 @@ export default function PostPage() {
 
   const handleCardClick = (questionId: string) => {
     router.push(`/post/${questionId}`);
+  };
+
+  // AI Enhancement handlers
+  const handleEnhanceWithAI = async () => {
+    if (!questionTitle.trim() && !questionDescription.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter a question title or description first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsEnhancing(true);
+      const response = await aiApi.enhanceQuestion({
+        questionTitle: questionTitle,
+        questionDescription: questionDescription,
+        questionCategory: questionCategory,
+      });
+
+      setEnhancedVersion(response.enhancedQuestion);
+      setShowEnhanced(true);
+      
+      toast({
+        title: "Question Enhanced!",
+        description: "Review the AI-improved version below.",
+      });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      console.error("AI enhancement error:", err);
+      toast({
+        title: "Enhancement Failed",
+        description: error.response?.data?.error || "Failed to enhance question. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleAcceptEnhanced = () => {
+    if (enhancedVersion) {
+      setQuestionTitle(enhancedVersion.enhancedTitle);
+      setQuestionDescription(enhancedVersion.enhancedDescription);
+      if (enhancedVersion.suggestedTags?.length) {
+        setQuestionTags(enhancedVersion.suggestedTags.join(", "));
+      }
+      setShowEnhanced(false);
+      setEnhancedVersion(null);
+      toast({
+        title: "Enhanced Version Applied",
+        description: "You can still edit the question before posting.",
+      });
+    }
+  };
+
+  const handleRejectEnhanced = () => {
+    setShowEnhanced(false);
+    setEnhancedVersion(null);
+  };
+
+  const handleRegenerateEnhanced = () => {
+    handleEnhanceWithAI();
   };
 
   const formatDate = (date: Date | string) => {
@@ -431,6 +503,94 @@ export default function PostPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* AI Enhancement Button */}
+            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200">
+              <div>
+                <p className="text-sm font-medium text-slate-800">Need help improving your question?</p>
+                <p className="text-xs text-slate-500">AI can enhance clarity and add context</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleEnhanceWithAI}
+                disabled={isEnhancing || (!questionTitle.trim() && !questionDescription.trim())}
+                className="gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              >
+                {isEnhancing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4" />
+                )}
+                Enhance with AI
+              </Button>
+            </div>
+
+            {/* Enhanced Version Preview */}
+            {showEnhanced && enhancedVersion && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-blue-800">AI Enhanced Version</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRegenerateEnhanced}
+                      disabled={isEnhancing}
+                      className="gap-1"
+                    >
+                      <RefreshCw className="h-3 w-3" />
+                      Regenerate
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRejectEnhanced}
+                      className="gap-1 text-red-600 hover:bg-red-50"
+                    >
+                      <X className="h-3 w-3" />
+                      Reject
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAcceptEnhanced}
+                      className="gap-1 bg-emerald-600 hover:bg-emerald-700"
+                    >
+                      <Check className="h-3 w-3" />
+                      Accept
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-700">Enhanced Title:</p>
+                  <p className="text-sm text-slate-800 bg-white p-2 rounded border">
+                    {enhancedVersion.enhancedTitle}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-700">Enhanced Description:</p>
+                  <p className="text-sm text-slate-800 bg-white p-2 rounded border whitespace-pre-wrap">
+                    {enhancedVersion.enhancedDescription}
+                  </p>
+                </div>
+                {enhancedVersion.suggestedTags?.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-slate-700">Suggested Tags:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {enhancedVersion.suggestedTags.map((tag, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Question Title */}
             <div className="space-y-2">
               <Label htmlFor="title">Question Title *</Label>
