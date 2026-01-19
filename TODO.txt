@@ -1,21 +1,25 @@
 TODO:
     
-    1: In the Navbar when the user is in seeker dashboard, in that the user should see the navbar related to the seekers such as post explore and Expert dashboard
+    1: In the Expert onboarding, there has to be an option to link your linkedin thorough which use LinkedIn OAuth to get: Full Name Profile Picture Headline Current Company Public Profile URL and then Use AI to expand profile Once you get: Headline Job titles Company names You then: Feed this into LLM (GPT / Vertex AI) Generate: Professional bio Skill tags Service categories Experience summaries or whatever things are required, and then expert can manually edit sometings if they want to
 
-    2: The Feed Page mneeds to be made using SocketIO/Websocket which will show the questions posted by the user in realtime and filtered according to expert's expertise and interests
+    2: When a seeker posts a question use ai automatically to enhance it when user clicks enhance the question to extranch more and more details and send button and let user again choose if the ai version is correct or not and then regenrate, or take step backward or proceed if ewverythings in place
 
-    3: The seekers post/:id page should also be equipped with socket connection such that seekers can see there answers proposals in real time
+    3: in the expert profile edit there will be a section for payements, where the expert can setup there payment methods(which is bank details) and secondary they can check and track all there payments till now and can choose to payout on there will and any number of amoount but not more than there current balance
 
-    4: When user gets any proposal for any question it also gets an email for the same
+    4: Similarly in the seekers profile there will be a tab which show details regarding payment history and all
 
-    5: When the expert gets any type of the appointment then the too it gets and email as notification
+    5: The payment system will be such that, the seeker will pay the ammmount as soon as they book the appointment, and the payment will immidietly reflect to the expert's wallet and will be trnaferred to the experts bank account only when the expert presses the process payout
+
+    6: The Payment system would be taken place by razorpay and all the payment related history will be stored on the platform database itself
 
 
 
 BUGS:
 
-    1: expert/profile/edit is redirecting back to the /expert page
+    1: In the /expert/requests/:id, the expert is getting option to write answer rather it should be that expert can pitch themeselves to the seeker to appointment them by giving a simple answer
 
-    2: expert/profile is empty, it has to show user profile and button for expert rofile edit
+    2: /post/:id page the seeker shall see all the proposals with answers in real time and on clicking the accept the seeker should be redirected to the booking page of the expert along with query parameter in the url of the question id
 
-    3: 
+    3: if the url of the booking page of the expert has query parameter of questionID then the booking will happen against that question (simpley the the expert will have a prior acknkowledgment of about the question regarding which the booking has happend) and for the teh corresponding expert/request/:id  has to be updated
+
+    4: also the seeker information in the expert/request/:id is showing as Anonymous Knowledge Seeker along with a question mark in the profile image section 
