@@ -8,6 +8,11 @@ async function main() {
 
   // Clear existing data (optional - be careful in production!)
   console.log("🗑️  Clearing existing data...");
+  // Clear in correct order due to foreign key constraints
+  await prisma.walletTransaction.deleteMany();
+  await prisma.expertBankDetails.deleteMany();
+  await prisma.expertWallet.deleteMany();
+  await prisma.proposal.deleteMany();
   await prisma.appointment.deleteMany();
   await prisma.questions.deleteMany();
   await prisma.knowledgeSeeker.deleteMany();
@@ -537,6 +542,270 @@ async function main() {
   });
 
   console.log("✅ Questions seeded");
+
+  // Seed Proposals
+  console.log("📝 Seeding proposals...");
+
+  const proposal1 = await prisma.proposal.create({
+    data: {
+      questionId: question1.id,
+      expertId: expert2.id,
+      message: "I'd be happy to help you optimize your React application! I have extensive experience with performance optimization including code splitting, memoization, and virtual list implementations.",
+      price: 75,
+      communicationMedium: "VIDEO_CALL",
+      estimatedDuration: "45 minutes",
+      status: "PENDING",
+    },
+  });
+
+  const proposal2 = await prisma.proposal.create({
+    data: {
+      questionId: question1.id,
+      expertId: expert4.id,
+      message: "React performance is my specialty! Let's discuss lazy loading, React.memo, useMemo, useCallback, and profiling techniques to identify bottlenecks.",
+      price: 60,
+      communicationMedium: "VIDEO_CALL",
+      estimatedDuration: "30 minutes",
+      status: "PENDING",
+    },
+  });
+
+  await prisma.proposal.create({
+    data: {
+      questionId: question2.id,
+      expertId: expert2.id,
+      message: "Database design is crucial for e-commerce platforms. I can help you with normalization, indexing strategies, and scaling considerations.",
+      price: 100,
+      communicationMedium: "VIDEO_CALL",
+      estimatedDuration: "1 hour",
+      status: "ACCEPTED",
+    },
+  });
+
+  await prisma.proposal.create({
+    data: {
+      questionId: question3.id,
+      expertId: expert1.id,
+      message: "I'd love to share my 10+ years of UI/UX experience with you. We can cover principles like visual hierarchy, consistency, feedback, and accessibility.",
+      price: 80,
+      communicationMedium: "VIDEO_CALL",
+      estimatedDuration: "45 minutes",
+      status: "ACCEPTED",
+    },
+  });
+
+  console.log("✅ Proposals seeded");
+
+  // Seed Expert Wallets and Bank Details
+  console.log("💰 Seeding wallets and bank details...");
+
+  // Wallet for expert1 (Sarah Chen) with bank details
+  const wallet1 = await prisma.expertWallet.create({
+    data: {
+      expertId: expert1.id,
+      balance: 450.00,
+      currency: "INR",
+    },
+  });
+
+  await prisma.expertBankDetails.create({
+    data: {
+      walletId: wallet1.id,
+      accountHolderName: "Sarah Chen",
+      accountNumber: "1234567890123456",
+      ifscCode: "HDFC0001234",
+      bankName: "HDFC Bank",
+    },
+  });
+
+  // Wallet for expert2 (Michael Rodriguez) with bank details
+  const wallet2 = await prisma.expertWallet.create({
+    data: {
+      expertId: expert2.id,
+      balance: 1250.00,
+      currency: "INR",
+    },
+  });
+
+  await prisma.expertBankDetails.create({
+    data: {
+      walletId: wallet2.id,
+      accountHolderName: "Michael Rodriguez",
+      accountNumber: "9876543210987654",
+      ifscCode: "ICIC0005678",
+      bankName: "ICICI Bank",
+    },
+  });
+
+  // Wallet for expert3 (Emily Johnson) - no bank details yet
+  const wallet3 = await prisma.expertWallet.create({
+    data: {
+      expertId: expert3.id,
+      balance: 200.00,
+      currency: "INR",
+    },
+  });
+
+  // Wallet for expert4 (David Kim) with bank details
+  const wallet4 = await prisma.expertWallet.create({
+    data: {
+      expertId: expert4.id,
+      balance: 750.00,
+      currency: "INR",
+    },
+  });
+
+  await prisma.expertBankDetails.create({
+    data: {
+      walletId: wallet4.id,
+      accountHolderName: "David Kim",
+      accountNumber: "5555666677778888",
+      ifscCode: "SBIN0009876",
+      bankName: "State Bank of India",
+    },
+  });
+
+  console.log("✅ Wallets and bank details seeded");
+
+  // Seed Wallet Transactions
+  console.log("💸 Seeding wallet transactions...");
+
+  // Transactions for expert1
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet1.id,
+      type: "CREDIT",
+      amount: 300.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_001",
+      description: "Payment for UI/UX consultation",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet1.id,
+      type: "CREDIT",
+      amount: 200.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_002",
+      description: "Payment for design review session",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet1.id,
+      type: "PAYOUT",
+      amount: 50.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPayoutId: "pout_sample_001",
+      description: "Payout to bank account ending in 3456",
+    },
+  });
+
+  // Transactions for expert2
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet2.id,
+      type: "CREDIT",
+      amount: 500.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_003",
+      description: "Payment for database design consultation",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet2.id,
+      type: "CREDIT",
+      amount: 750.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_004",
+      description: "Payment for React optimization session",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet2.id,
+      type: "CREDIT",
+      amount: 400.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_005",
+      description: "Payment for API design review",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet2.id,
+      type: "PAYOUT",
+      amount: 400.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPayoutId: "pout_sample_002",
+      description: "Payout to bank account ending in 7654",
+    },
+  });
+
+  // Transactions for expert3
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet3.id,
+      type: "CREDIT",
+      amount: 200.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_006",
+      description: "Payment for career coaching session",
+    },
+  });
+
+  // Transactions for expert4
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet4.id,
+      type: "CREDIT",
+      amount: 600.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_007",
+      description: "Payment for React Native consultation",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet4.id,
+      type: "CREDIT",
+      amount: 350.00,
+      currency: "INR",
+      status: "COMPLETED",
+      razorpayPaymentId: "pay_sample_008",
+      description: "Payment for Flutter app review",
+    },
+  });
+
+  await prisma.walletTransaction.create({
+    data: {
+      walletId: wallet4.id,
+      type: "PAYOUT",
+      amount: 200.00,
+      currency: "INR",
+      status: "PENDING",
+      description: "Payout request to bank account ending in 8888",
+    },
+  });
+
+  console.log("✅ Wallet transactions seeded");
 
   // Seed an Admin user
   console.log("👑 Seeding admin user...");
